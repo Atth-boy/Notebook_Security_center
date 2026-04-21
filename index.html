@@ -69,9 +69,11 @@
       font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: background 0.15s;
+      box-shadow: 0 1px 2px rgba(249,115,22,0.2), 0 4px 10px rgba(249,115,22,0.18);
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
     }
-    .btn-primary:hover { background: #ea580c; }
+    .btn-primary:hover { background: #ea580c; box-shadow: 0 2px 6px rgba(249,115,22,0.25), 0 8px 18px rgba(249,115,22,0.28); }
+    .btn-primary:active { transform: translateY(1px); }
 
     /* ===== AREA SELECTION ===== */
     .area-btn {
@@ -79,24 +81,31 @@
       align-items: center;
       gap: 12px;
       width: 100%;
-      padding: 14px 18px;
+      padding: 13px 16px;
       margin-bottom: 10px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      background: white;
+      border: 1.5px solid #fed7aa;
+      border-radius: 8px;
+      background: #fff7ed;
       font-family: inherit;
       font-size: 14px;
       font-weight: 600;
-      color: #374151;
+      color: #c2410c;
       cursor: pointer;
       text-align: left;
-      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(249,115,22,0.08);
+      transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
     }
     .area-btn:last-child { margin-bottom: 0; }
-    .area-btn:hover { border-color: #f97316; background: #fff7ed; color: #f97316; }
-    .area-btn.overview { border-color: #f97316; color: #f97316; }
-    .area-btn.overview:hover { background: #fff7ed; }
-    .area-icon { font-size: 22px; }
+    .area-btn:hover { border-color: #f97316; background: #ffedd5; box-shadow: 0 2px 8px rgba(249,115,22,0.2); }
+    .area-btn.overview { border-color: #cbd5e0; background: linear-gradient(135deg, rgba(31,41,55,0.05) 0%, rgba(249,115,22,0.06) 100%); color: #374151; box-shadow: 0 1px 3px rgba(15,23,42,0.06); }
+    .area-btn.overview:hover { border-color: #94a3b8; background: linear-gradient(135deg, rgba(31,41,55,0.08) 0%, rgba(249,115,22,0.1) 100%); box-shadow: 0 2px 8px rgba(15,23,42,0.1); }
+    .area-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #f97316;
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.2);
+      flex-shrink: 0;
+    }
+    .area-dot.overview { background: #64748b; box-shadow: 0 0 0 3px rgba(100,116,139,0.15); }
 
     /* ===== MAIN MENU ===== */
     .menu-header {
@@ -107,26 +116,36 @@
     }
     .menu-area-label {
       font-size: 13px;
-      color: #64748b;
-      background: #f1f5f9;
-      padding: 5px 14px;
-      border-radius: 20px;
+      font-weight: 600;
+      color: #c2410c;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      padding: 5px 14px 5px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .btn-settings-group { display: flex; gap: 6px; }
     .btn-settings {
-      background: none;
+      background: #fff;
       border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 6px 12px;
+      border-radius: 999px;
+      padding: 6px 12px 6px 10px;
       font-size: 12px;
+      font-weight: 500;
       cursor: pointer;
-      color: #64748b;
+      color: #475569;
       font-family: inherit;
       transition: all 0.15s;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .btn-settings:hover { border-color: #f97316; color: #f97316; background: #fff7ed; }
-    .btn-settings.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+    .btn-settings svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .btn-settings:hover { border-color: #f97316; color: #c2410c; background: #fff7ed; box-shadow: 0 1px 4px rgba(249,115,22,0.1); }
+    .btn-settings.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; box-shadow: 0 1px 4px rgba(239,68,68,0.12); }
 
     .menu-btn {
       display: flex;
@@ -153,13 +172,28 @@
     .menu-btn.disabled:hover { transform: none; box-shadow: none; border-color: #e2e8f0; background: white; }
     .wip-badge {
       margin-left: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background: #fef3c7;
-      color: #d97706;
+      color: #b45309;
       font-size: 11px;
       font-weight: 600;
-      padding: 3px 8px;
-      border-radius: 6px;
+      padding: 3px 10px 3px 8px;
+      border-radius: 999px;
+      border: 1px solid #fde68a;
       white-space: nowrap;
+    }
+    .wip-badge .wip-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #d97706;
+      box-shadow: 0 0 0 3px rgba(217,119,6,0.18);
+      flex-shrink: 0;
+      animation: wip-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes wip-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(217,119,6,0.18); }
+      50%       { box-shadow: 0 0 0 5px rgba(217,119,6,0.05); }
     }
 
     /* ===== RESPONSIVE (mobile) ===== */
@@ -224,28 +258,37 @@
   <div class="screen" id="screenArea">
     <div class="card-logo">🏢</div>
     <div class="card-title">เลือกพื้นที่ของคุณ</div>
-    <div class="card-sub">ระบบบันทึกผู้เข้าปฏิบัติงานในสถานีไฟฟ้า</div>
+    <div class="card-sub">ระบบบันทึกข้อมูลศูนย์รักษาความปลอดภัยสถานีไฟฟ้า</div>
     <button class="area-btn" onclick="selectArea('บางแค')">
-      <span class="area-icon">⚡</span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางแค
+      <span class="area-dot"></span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางแค
     </button>
     <button class="area-btn" onclick="selectArea('บางบัวทอง')">
-      <span class="area-icon">⚡</span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางบัวทอง
+      <span class="area-dot"></span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางบัวทอง
     </button>
     <button class="area-btn" onclick="selectArea('พระประแดง')">
-      <span class="area-icon">⚡</span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าพระประแดง
+      <span class="area-dot"></span>ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าพระประแดง
     </button>
     <button class="area-btn overview" onclick="selectArea('ภาพรวม')">
-      <span class="area-icon">📊</span>ภาพรวมทั้ง 3 ศูนย์
+      <span class="area-dot overview"></span>ภาพรวมทั้ง 3 ศูนย์
     </button>
   </div>
 
   <!-- ===== SCREEN 3: MAIN MENU ===== -->
   <div class="screen" id="screenMenu">
     <div class="menu-header">
-      <span class="menu-area-label">📍 <span id="menuAreaLabel">—</span></span>
+      <span class="menu-area-label">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M8 14s5-4.5 5-8A5 5 0 0 0 3 6c0 3.5 5 8 5 8Z"/><circle cx="8" cy="6" r="1.5"/></svg>
+        <span id="menuAreaLabel">—</span>
+      </span>
       <div class="btn-settings-group">
-        <button class="btn-settings" onclick="changeArea()" title="เปลี่ยนพื้นที่">🔄 เปลี่ยนพื้นที่</button>
-        <button class="btn-settings danger" onclick="logout()" title="ออกจากระบบ">🚪 ออกจากระบบ</button>
+        <button class="btn-settings" onclick="changeArea()" title="เปลี่ยนพื้นที่">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 2.5v2.6h-2.6"/></svg>
+          เปลี่ยนพื้นที่
+        </button>
+        <button class="btn-settings danger" onclick="logout()" title="ออกจากระบบ">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2"/></svg>
+          ออกจากระบบ
+        </button>
       </div>
     </div>
     <div class="card-logo">📋</div>
@@ -264,7 +307,7 @@
         <div class="menu-btn-title">ระบบสมุดบันทึก</div>
         <div class="menu-btn-desc">บันทึกรายการอุปกรณ์ขัดข้อง</div>
       </div>
-      <span class="wip-badge">🚧 เร็วๆ นี้</span>
+      <span class="wip-badge"><span class="wip-dot"></span>เร็วๆ นี้</span>
     </button>
   </div>
 
