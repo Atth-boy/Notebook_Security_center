@@ -19,45 +19,6 @@
       font-size: 14px;
     }
 
-    /* ===== AREA SELECTOR SCREEN ===== */
-    #areaScreen {
-      position: fixed; inset: 0;
-      background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #f97316 100%);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
-    }
-    .area-box {
-      background: white;
-      border-radius: 16px;
-      padding: 40px 36px;
-      width: 420px;
-      max-width: 95vw;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      text-align: center;
-    }
-    .area-box .logo { font-size: 44px; margin-bottom: 10px; }
-    .area-box h2 { font-size: 18px; font-weight: 700; color: #374151; margin-bottom: 4px; }
-    .area-box p  { font-size: 13px; color: #64748b; margin-bottom: 28px; }
-    .area-btn {
-      display: block; width: 100%;
-      padding: 14px 20px;
-      margin-bottom: 12px;
-      border: 2px solid #e2e8f0;
-      border-radius: 10px;
-      background: white;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      color: #374151;
-      cursor: pointer;
-      text-align: left;
-      transition: all 0.2s;
-      display: flex; align-items: center; gap: 12px;
-    }
-    .area-btn:hover { border-color: #f97316; background: #fff7ed; color: #f97316; }
-    .area-btn:last-child { margin-bottom: 0; }
-    .area-btn .area-icon { font-size: 22px; }
-
     /* ===== HEADER ===== */
     header {
       background: linear-gradient(135deg, #374151, #f97316);
@@ -125,6 +86,21 @@
       display: flex; align-items: center; gap: 6px;
       flex-shrink: 0;
     }
+    .btn-back-menu {
+      margin-left: auto;
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #374151;
+      transition: all 0.15s;
+    }
+    .btn-back-menu:hover { border-color: #f97316; color: #f97316; background: #fff7ed; }
     .date-picker-wrap label {
       font-size: 12px; color: #64748b; white-space: nowrap;
     }
@@ -141,67 +117,6 @@
     }
     .date-picker-wrap input[type="date"]:focus,
     .date-picker-wrap input[type="date"]:hover { border-color: #f97316; }
-
-    /* ===== PASSWORD MODAL ===== */
-    #pwOverlay {
-      display: none;
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-    #pwOverlay.active { display: flex; }
-    .pw-box {
-      background: white;
-      border-radius: 14px;
-      padding: 32px 30px;
-      width: 340px;
-      max-width: 94vw;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-      text-align: center;
-    }
-    .pw-box .pw-icon { font-size: 36px; margin-bottom: 10px; }
-    .pw-box h3 { font-size: 16px; font-weight: 700; color: #374151; margin-bottom: 4px; }
-    .pw-box .pw-sub { font-size: 13px; color: #64748b; margin-bottom: 20px; }
-    .pw-input-wrap { position: relative; margin-bottom: 8px; }
-    .pw-input-wrap input {
-      width: 100%;
-      padding: 11px 42px 11px 14px;
-      border: 2px solid #e2e8f0;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 15px;
-      text-align: center;
-      letter-spacing: 4px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .pw-input-wrap input:focus { border-color: #f97316; }
-    .pw-input-wrap input.error { border-color: #ef4444; }
-    .pw-toggle {
-      position: absolute; right: 12px; top: 50%;
-      transform: translateY(-50%);
-      background: none; border: none; cursor: pointer;
-      color: #94a3b8; font-size: 16px; padding: 2px;
-    }
-    .pw-error { color: #ef4444; font-size: 12px; min-height: 18px; margin-bottom: 16px; }
-    .pw-actions { display: flex; gap: 10px; }
-    .btn-pw-back {
-      flex: 1; padding: 10px;
-      border: 1px solid #e2e8f0; border-radius: 8px;
-      background: white; font-family: inherit; font-size: 13px;
-      cursor: pointer; color: #374151;
-    }
-    .btn-pw-back:hover { background: #f9fafb; }
-    .btn-pw-enter {
-      flex: 2; padding: 10px;
-      background: #f97316; color: white;
-      border: none; border-radius: 8px;
-      font-family: inherit; font-size: 13px; font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-pw-enter:hover { background: #ea580c; }
 
     /* ===== TOOLBAR ===== */
     .toolbar {
@@ -547,31 +462,6 @@
 </head>
 <body>
 
-<!-- ===== AREA SELECTOR ===== -->
-<div id="areaScreen">
-  <div class="area-box">
-    <div class="logo">🏢</div>
-    <h2>เลือกพื้นที่ของคุณ</h2>
-    <p>ระบบบันทึกผู้เข้าปฏิบัติงานในสถานีไฟฟ้า</p>
-    <button class="area-btn" onclick="selectArea('บางแค')">
-      <span class="area-icon">⚡</span>
-      ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางแค
-    </button>
-    <button class="area-btn" onclick="selectArea('บางบัวทอง')">
-      <span class="area-icon">⚡</span>
-      ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางบัวทอง
-    </button>
-    <button class="area-btn" onclick="selectArea('พระประแดง')">
-      <span class="area-icon">⚡</span>
-      ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าพระประแดง
-    </button>
-    <button class="area-btn" onclick="selectArea('ภาพรวม')" style="border-color:#f97316; color:#f97316;">
-      <span class="area-icon">📊</span>
-      ภาพรวมทั้ง 3 ศูนย์
-    </button>
-  </div>
-</div>
-
 <!-- ===== MAIN PAGE ===== -->
 <header>
   <div class="header-left">
@@ -581,32 +471,14 @@
       <p>กองสถานีไฟฟ้า — ระบบลงทะเบียนผู้เข้าสถานี</p>
     </div>
   </div>
-  <button class="area-tag" onclick="changeArea()" title="เปลี่ยนพื้นที่">
-    📍 <span id="currentAreaLabel">—</span> &nbsp;✕
-  </button>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <span class="area-tag" style="cursor:default">📍 <span id="currentAreaLabel">—</span></span>
+    <button class="area-tag" onclick="logoutToIndex()" title="ออกจากระบบ" style="background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4);">🚪 ออกจากระบบ</button>
+  </div>
 </header>
 
 <!-- Date Navigation -->
 <div class="date-nav" id="dateNav"></div>
-
-<!-- ===== PASSWORD MODAL ===== -->
-<div id="pwOverlay">
-  <div class="pw-box">
-    <div class="pw-icon">🔒</div>
-    <h3 id="pwAreaName"></h3>
-    <p class="pw-sub">กรุณากรอกรหัสผ่านเพื่อเข้าใช้งาน</p>
-    <div class="pw-input-wrap">
-      <input type="password" id="pwInput" placeholder="••••" maxlength="20"
-        onkeydown="if(event.key==='Enter') confirmPassword()" />
-      <button class="pw-toggle" onclick="togglePwVisibility()" id="pwToggleBtn" title="แสดง/ซ่อน">👁</button>
-    </div>
-    <div class="pw-error" id="pwError"></div>
-    <div class="pw-actions">
-      <button class="btn-pw-back" onclick="cancelPassword()">← กลับ</button>
-      <button class="btn-pw-enter" onclick="confirmPassword()">เข้าสู่ระบบ</button>
-    </div>
-  </div>
-</div>
 
 <!-- Toolbar -->
 <div class="toolbar">
@@ -905,29 +777,15 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  /* ===== Password hashes (SHA-256) ===== */
-  const AREA_PASSWORDS = {
-    'บางแค':      'f457528f5880e850a162d62a3db51dda0f8c339434dd424b9781570aab5d4abb',
-    'บางบัวทอง':  '735483905673bd9e3b9fe417248633156a3e9d5083ea65647272f9c9e37a994f',
-    'พระประแดง':  'e199e876c25e6cea55393968e59c89dc394613521eb37734ce60ce53cd3c2d78',
-    'ภาพรวม':     'abe7e80850b4460618ffcfb684906568924c9afe6f07a3fb48c588c554290e1b',
-  };
-
-  async function hashPassword(pw) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
   /* ===== Google Sheets Config ===== */
   const SHEET_ID   = '1ZbfpYmviWaMQ8mc8WQz6ZTZN4k0MM17pKloYGO9nVZA';
   const CSV_URL    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent('บันทึก')}`;
   let   SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziuDE16i0jq4knGer6xqBByV1Kb2BjyHeF9bt8FJID5TLK7EhZeFwPqUb4scvMgdPK/exec';
 
   /* ===== State ===== */
-  let currentArea    = null;
-  let pendingArea    = null;
-  let selectedDate   = null;
-  let records        = [];
+  let currentArea  = null;
+  let selectedDate = null;
+  let records      = [];
 
   const today = new Date();
   function fmtDate(d) {
@@ -1010,60 +868,31 @@
     }
   }
 
-  /* ===== Area Selection + Password ===== */
-  function selectArea(area) {
-    pendingArea = area;
-    const areaFullNames = {
-      'บางแค':     'ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางแค',
-      'บางบัวทอง': 'ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าบางบัวทอง',
-      'พระประแดง': 'ศูนย์รักษาความปลอดภัยสถานีไฟฟ้าพระประแดง',
-      'ภาพรวม':    'ภาพรวมทั้ง 3 ศูนย์',
-    };
-    document.getElementById('pwAreaName').textContent = areaFullNames[area];
-    document.getElementById('pwInput').value = '';
-    document.getElementById('pwError').textContent = '';
-    document.getElementById('pwInput').classList.remove('error');
-    document.getElementById('pwOverlay').classList.add('active');
-    setTimeout(() => document.getElementById('pwInput').focus(), 100);
-  }
-
-  async function confirmPassword() {
-    const entered = document.getElementById('pwInput').value;
-    const hashed  = await hashPassword(entered);
-    if (hashed === AREA_PASSWORDS[pendingArea]) {
-      document.getElementById('pwOverlay').classList.remove('active');
-      document.getElementById('areaScreen').style.display = 'none';
-      currentArea = pendingArea;
-      pendingArea = null;
-      selectedDate = fmtDate(today);
-      document.getElementById('currentAreaLabel').textContent =
-        currentArea === 'ภาพรวม' ? 'ภาพรวมทั้ง 3 ศูนย์' : currentArea;
-      // ภาพรวม = read-only (ซ่อนปุ่มเพิ่ม)
-      document.getElementById('btnAdd').style.display =
-        currentArea === 'ภาพรวม' ? 'none' : '';
-      buildDateNav();
-      loadRecords();
-    } else {
-      document.getElementById('pwError').textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
-      document.getElementById('pwInput').classList.add('error');
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
+  /* ===== Init: ดึง token และ area จาก sessionStorage ===== */
+  function init() {
+    const token = sessionStorage.getItem('mea_token');
+    const area  = sessionStorage.getItem('mea_area');
+    if (!token || !area) {
+      window.location.href = 'index.html';
+      return;
     }
-  }
-
-  function cancelPassword() {
-    document.getElementById('pwOverlay').classList.remove('active');
-    pendingArea = null;
-  }
-
-  function togglePwVisibility() {
-    const inp = document.getElementById('pwInput');
-    inp.type = inp.type === 'password' ? 'text' : 'password';
+    currentArea  = area;
+    selectedDate = fmtDate(today);
+    document.getElementById('currentAreaLabel').textContent =
+      currentArea === 'ภาพรวม' ? 'ภาพรวมทั้ง 3 ศูนย์' : currentArea;
+    document.getElementById('btnAdd').style.display =
+      currentArea === 'ภาพรวม' ? 'none' : '';
+    buildDateNav();
+    loadRecords();
   }
 
   function changeArea() {
-    currentArea = null;
-    document.getElementById('areaScreen').style.display = 'flex';
+    window.location.href = 'index.html';
+  }
+
+  function logoutToIndex() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
   }
 
   /* ===== Date Nav ===== */
@@ -1091,7 +920,8 @@
          <label>เลือกวันอื่น</label>
          <input type="date" id="datePicker" value="${selectedDate}"
            onchange="switchDatePicker(this.value)" />
-       </div>`;
+       </div>
+       <button class="btn-back-menu" onclick="changeArea()">◀ เลือกระบบ</button>`;
   }
 
   function switchDate(dateStr, btn) {
@@ -1452,6 +1282,8 @@
     if (Date.now() - _menuOpenTime < 300) return;
     document.getElementById('floatingMenu').classList.remove('show');
   });
+
+  init();
 </script>
 </body>
 </html>
