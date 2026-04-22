@@ -245,8 +245,12 @@
     <div class="card-logo">🔐</div>
     <div class="card-title">ศูนย์รักษาความปลอดภัย</div>
     <div class="card-sub">กองสถานีไฟฟ้า — กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ</div>
+    <input type="text" name="username" autocomplete="username"
+      style="position:absolute;opacity:0;height:0;width:0;pointer-events:none;"
+      tabindex="-1" aria-hidden="true" />
     <div class="pw-input-wrap">
-      <input type="password" id="loginInput" placeholder="••••••••" maxlength="30"
+      <input type="password" id="loginInput" name="password" autocomplete="current-password"
+        placeholder="••••••••" maxlength="30"
         onkeydown="if(event.key==='Enter') doLogin()" />
       <button class="pw-toggle" onclick="toggleLoginVis()" title="แสดง/ซ่อน">👁</button>
     </div>
