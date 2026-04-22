@@ -1,7 +1,18 @@
 // ============================================================
-//  Apps Script สำหรับ page2.html — บันทึกผู้เข้าสถานีไฟฟ้า
-//  Sheet ID: ดูใน page2.html บรรทัด SHEET_ID
+//  Apps Script — ศูนย์รักษาความปลอดภัย กสฟ.
+//  Handles: verify login + CRUD for page2.html
 // ============================================================
+
+// ---------- Token Config ----------
+// แก้ token ที่นี่ที่เดียว — ไม่ต้องแก้ HTML
+// role: 'master' = ดูได้ทุก area | 'user' = ล็อกตาม area
+const TOKEN_CONFIG = {
+  'mea':  { role: 'master', area: null          },
+  '0414': { role: 'user',   area: 'บางแค'       },
+  '0415': { role: 'user',   area: 'บางบัวทอง'   },
+  '0418': { role: 'user',   area: 'พระประแดง'   },
+  '0500': { role: 'user',   area: 'ภาพรวม'      },  // ภาพรวม = ดูได้ทุก area เหมือน master
+};
 
 const SHEET_NAME = 'บันทึก';
 
@@ -11,21 +22,49 @@ const HEADERS = [
   'dateFrom', 'dateTo', 'timeFrom', 'timeTo', 'workDetail'
 ];
 
-// col index (1-based) ตาม HEADERS
 const COL = {
   timestamp:1, area:2, name:3, empId:4,
   site:5, dept:6, div:7, tel:8,
   dateFrom:9, dateTo:10, timeFrom:11, timeTo:12, workDetail:13
 };
 
-// ---------- doGet: อ่านข้อมูลอย่างเดียว ----------
+// ---------- Token Verification ----------
+function verifyToken(token) {
+  if (!token) return null;
+  return TOKEN_CONFIG[String(token).trim()] || null;
+}
+
+// user token ที่ต้อง filter area (ภาพรวม = ไม่ filter)
+function getFilterArea(info) {
+  if (!info) return null;
+  if (info.role === 'master') return null;
+  if (info.area === 'ภาพรวม') return null;
+  return info.area;
+}
+
+// ---------- doGet ----------
 function doGet(e) {
+  const params = (e && e.parameter) ? e.parameter : {};
+  const action = params.action || '';
+  const token  = params.token  || '';
+
+  // Login endpoint — index.html ยิงมาตรวจสอบ token
+  if (action === 'verify') {
+    const info = verifyToken(token);
+    if (!info) return jsonOk({ valid: false });
+    return jsonOk({ valid: true, role: info.role, area: info.area });
+  }
+
+  // Read endpoint — ต้องผ่าน token
+  const info = verifyToken(token);
+  if (!info) return jsonOk({ status: 'error', msg: 'unauthorized' });
+
   const lock = LockService.getScriptLock();
   lock.tryLock(10000);
   try {
     const ss    = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = getOrCreateSheet(ss);
-    return handleRead(sheet);
+    return handleRead(sheet, info);
   } catch(err) {
     return jsonOk({ status: 'error', msg: err.toString() });
   } finally {
@@ -33,10 +72,14 @@ function doGet(e) {
   }
 }
 
-// ---------- doPost: เขียนข้อมูล (add / update / delete) ----------
+// ---------- doPost ----------
 function doPost(e) {
   const params = (e && e.parameter) ? e.parameter : {};
   const action = params.action || '';
+  const token  = params.token  || '';
+
+  const info = verifyToken(token);
+  if (!info) return jsonOk({ status: 'error', msg: 'unauthorized' });
 
   const lock = LockService.getScriptLock();
   lock.tryLock(10000);
@@ -44,9 +87,9 @@ function doPost(e) {
     const ss    = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = getOrCreateSheet(ss);
 
-    if (action === 'add')    return handleAdd(sheet, params);
-    if (action === 'update') return handleUpdate(sheet, params);
-    if (action === 'delete') return handleDelete(sheet, params);
+    if (action === 'add')    return handleAdd(sheet, params, info);
+    if (action === 'update') return handleUpdate(sheet, params, info);
+    if (action === 'delete') return handleDelete(sheet, params, info);
 
     return jsonOk({ status: 'error', msg: 'unknown action: ' + action });
   } catch(err) {
@@ -70,9 +113,8 @@ function getOrCreateSheet(ss) {
     return sheet;
   }
 
-  // เช็คว่า header มีครบไหม — ถ้าขาดให้เพิ่มอัตโนมัติ
   const existingHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-  HEADERS.forEach((h, i) => {
+  HEADERS.forEach(h => {
     if (!existingHeaders.includes(h)) {
       const newCol = sheet.getLastColumn() + 1;
       sheet.getRange(1, newCol).setValue(h)
@@ -95,27 +137,40 @@ function cellToTime(val) {
   return val ? String(val) : '';
 }
 
-// ---------- Read: คืน records ทั้งหมด ----------
-function handleRead(sheet) {
+// ---------- Read: คืน records (filter area ถ้าเป็น user token) ----------
+function handleRead(sheet, info) {
   const data = sheet.getDataRange().getValues();
   if (data.length <= 1) return jsonOk([]);
-  const headers = data[0];
+
+  const headers    = data[0];
   const timeFields = ['timeFrom', 'timeTo'];
-  const rows = data.slice(1).map((r, i) => {
-    const obj = { _row: i + 2 };
-    headers.forEach((h, j) => {
-      if (!h) return;
-      obj[h] = timeFields.includes(h) ? cellToTime(r[j]) : (r[j] || '');
-    });
-    return obj;
-  });
+  const filterArea = getFilterArea(info);
+
+  const rows = data.slice(1)
+    .map((r, i) => {
+      const obj = { _row: i + 2 };
+      headers.forEach((h, j) => {
+        if (!h) return;
+        obj[h] = timeFields.includes(h) ? cellToTime(r[j]) : (r[j] || '');
+      });
+      return obj;
+    })
+    .filter(obj => !filterArea || obj.area === filterArea);
+
   return jsonOk(rows);
 }
 
 // ---------- Add: เพิ่ม record ใหม่ ----------
-function handleAdd(sheet, params) {
+function handleAdd(sheet, params, info) {
   const data = JSON.parse(params.data || '{}');
-  const now  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+
+  // user token (ไม่ใช่ภาพรวม) → ห้ามบันทึก area อื่น
+  const filterArea = getFilterArea(info);
+  if (filterArea && data.area !== filterArea) {
+    return jsonOk({ status: 'error', msg: 'unauthorized: area mismatch' });
+  }
+
+  const now = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
   sheet.appendRow([
     now,
     data.area       || '',
@@ -131,23 +186,31 @@ function handleAdd(sheet, params) {
     data.timeTo     || '',
     data.workDetail || '',
   ]);
-  // force tel/timeFrom/timeTo columns เป็น plain text เพื่อป้องกัน Sheets แปลงเป็น decimal
+
+  // force plain text ป้องกัน Sheets แปลงเบอร์โทร/เวลาเป็น decimal
   const newRow = sheet.getLastRow();
-  sheet.getRange(newRow, COL.tel).setNumberFormat('@');
-  sheet.getRange(newRow, COL.tel).setValue(data.tel || '');
-  sheet.getRange(newRow, COL.timeFrom).setNumberFormat('@');
-  sheet.getRange(newRow, COL.timeTo).setNumberFormat('@');
-  sheet.getRange(newRow, COL.timeFrom).setValue(data.timeFrom || '');
-  sheet.getRange(newRow, COL.timeTo).setValue(data.timeTo || '');
+  sheet.getRange(newRow, COL.tel).setNumberFormat('@').setValue(data.tel || '');
+  sheet.getRange(newRow, COL.timeFrom).setNumberFormat('@').setValue(data.timeFrom || '');
+  sheet.getRange(newRow, COL.timeTo).setNumberFormat('@').setValue(data.timeTo || '');
+
   return jsonOk({ status: 'ok' });
 }
 
 // ---------- Update: แก้ไขแถวที่ระบุ ----------
-function handleUpdate(sheet, params) {
+function handleUpdate(sheet, params, info) {
   const row = parseInt(params.row);
   if (!row || row < 2) return jsonOk({ status: 'error', msg: 'invalid row' });
-  const data = JSON.parse(params.data || '{}');
 
+  // ตรวจสอบว่า user token มีสิทธิ์แก้ไขแถวนี้
+  const filterArea = getFilterArea(info);
+  if (filterArea) {
+    const rowArea = sheet.getRange(row, COL.area).getValue();
+    if (rowArea !== filterArea) {
+      return jsonOk({ status: 'error', msg: 'unauthorized: area mismatch' });
+    }
+  }
+
+  const data = JSON.parse(params.data || '{}');
   const updatableFields = [
     'area','name','empId','site','dept','div','tel',
     'dateFrom','dateTo','timeFrom','timeTo','workDetail'
@@ -164,9 +227,19 @@ function handleUpdate(sheet, params) {
 }
 
 // ---------- Delete: ลบแถวที่ระบุ ----------
-function handleDelete(sheet, params) {
+function handleDelete(sheet, params, info) {
   const row = parseInt(params.row);
   if (!row || row < 2) return jsonOk({ status: 'error', msg: 'invalid row' });
+
+  // ตรวจสอบว่า user token มีสิทธิ์ลบแถวนี้
+  const filterArea = getFilterArea(info);
+  if (filterArea) {
+    const rowArea = sheet.getRange(row, COL.area).getValue();
+    if (rowArea !== filterArea) {
+      return jsonOk({ status: 'error', msg: 'unauthorized: area mismatch' });
+    }
+  }
+
   sheet.deleteRow(row);
   return jsonOk({ status: 'ok' });
 }
@@ -179,19 +252,31 @@ function jsonOk(obj) {
 }
 
 // ---------- ทดสอบ (รันใน Apps Script Editor) ----------
+function testVerify() {
+  Logger.log(doGet({ parameter: { action: 'verify', token: 'mea' } }).getContent());
+  Logger.log(doGet({ parameter: { action: 'verify', token: '0414' } }).getContent());
+  Logger.log(doGet({ parameter: { action: 'verify', token: 'wrong' } }).getContent());
+}
+
 function testRead() {
-  Logger.log(doGet({ parameter: {} }).getContent());
+  Logger.log(doGet({ parameter: { token: 'mea' } }).getContent());
+}
+
+function testReadArea() {
+  // user token 0414 ควรเห็นเฉพาะ area=บางแค
+  Logger.log(doGet({ parameter: { token: '0414' } }).getContent());
 }
 
 function testAdd() {
   const mock = {
     parameter: {
       action: 'add',
+      token: 'mea',
       data: JSON.stringify({
         area: 'บางแค', name: 'ทดสอบ ระบบ', empId: '9999999',
         site: 'สถานีย่อยบางแค', dept: 'ฝทดสอบ', div: 'กทดสอบ',
-        tel: '099-999-9999', dateFrom: '2026-04-18', dateTo: '2026-04-18',
-        timeFrom: '08:00', timeTo: '17:00', workDetail: 'ทดสอบระบบ\nบรรทัดที่สอง'
+        tel: '099-999-9999', dateFrom: '2026-04-22', dateTo: '2026-04-22',
+        timeFrom: '08:00', timeTo: '17:00', workDetail: 'ทดสอบระบบ'
       })
     }
   };
@@ -203,27 +288,25 @@ function testAdd() {
 // ============================================================
 //
 //  === กรณีติดตั้งใหม่ ===
-//  1. เปิด Google Sheet แล้วไปที่ Extensions > Apps Script
-//  2. ลบ code เดิมออก แล้ววาง code นี้ทั้งหมด (ยกเว้น comment นี้)
-//  3. Save (Ctrl+S)
-//  4. รัน testAdd() เพื่อ authorize และทดสอบ
-//  5. Deploy > New deployment
+//  1. เปิด Google Sheet → Extensions > Apps Script
+//  2. วาง code นี้ทั้งหมด > Save (Ctrl+S)
+//  3. รัน testVerify() เพื่อ authorize และตรวจสอบ
+//  4. Deploy > New deployment
 //     - Type: Web app
 //     - Execute as: Me
 //     - Who has access: Anyone
-//  6. Copy URL แล้วใส่ใน page2.html บรรทัด:
-//       let SCRIPT_URL = 'https://script.google.com/macros/s/xxx.../exec';
+//  5. Copy URL ใส่ใน index.html และ page2.html (บรรทัด SCRIPT_URL)
 //
 //  === กรณีอัปเดต Script ที่ deploy ไปแล้ว ===
 //  1. วาง code ใหม่ > Save
 //  2. Deploy > Manage deployments > Edit (ดินสอ) > Version: New version > Deploy
-//  3. *** ไม่ต้องเปลี่ยน URL ใน page2.html ***
+//  3. *** ไม่ต้องเปลี่ยน URL ใน HTML ***
 //
-//  หมายเหตุ: doGet = อ่านข้อมูลเท่านั้น (ไม่ cache ปัญหา)
-//            doPost = เขียนข้อมูล add/update/delete
+//  === Flow หลังอัปเดต ===
+//  index.html  → fetch SCRIPT_URL?action=verify&token=xxx  (แทน SHA-256)
+//  page2.html  → ส่ง token ทุก request (doGet และ doPost)
 //
-//  === อัปเดต Google Sheet (เพิ่มคอลัมน์ใหม่) ===
-//  Script จะเพิ่ม header คอลัมน์ให้อัตโนมัติเมื่อรันครั้งแรก
-//  หรือเพิ่มเองที่ sheet "บันทึก" คอลัมน์ K=timeFrom, L=timeTo, M=workDetail
+//  === เพิ่ม / แก้ Token ===
+//  แก้ที่ TOKEN_CONFIG ด้านบนเท่านั้น → Deploy เวอร์ชันใหม่
 //
 // ============================================================

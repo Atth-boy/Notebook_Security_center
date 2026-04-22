@@ -314,27 +314,8 @@
 </div>
 
 <script>
-  /* ===== Token Config (client-side ชั่วคราว — ย้ายไป Apps Script เมื่อพร้อม) ===== */
-  // role: 'master' = เลือกพื้นที่เองได้ทุกศูนย์ | 'user' = ล็อกพื้นที่ตาม token
-  const TOKEN_CONFIG = [
-    { plain: 'mea',  role: 'master', area: null          },
-    { plain: '0414', role: 'user',   area: 'บางแค'       },
-    { plain: '0415', role: 'user',   area: 'บางบัวทอง'   },
-    { plain: '0418', role: 'user',   area: 'พระประแดง'   },
-    { plain: '0500', role: 'user',   area: 'ภาพรวม'      },
-  ];
-  let TOKEN_MAP = {};  // { hash → { role, area } }
-
-  async function hashStr(str) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
-  async function buildTokenMap() {
-    for (const t of TOKEN_CONFIG) {
-      TOKEN_MAP[await hashStr(t.plain)] = { role: t.role, area: t.area };
-    }
-  }
+  /* ===== Config ===== */
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziuDE16i0jq4knGer6xqBByV1Kb2BjyHeF9bt8FJID5TLK7EhZeFwPqUb4scvMgdPK/exec';
 
   /* ===== Screen Management ===== */
   function showScreen(id) {
@@ -348,7 +329,6 @@
     const area  = sessionStorage.getItem('mea_area');
     const role  = sessionStorage.getItem('mea_role');
     if (!token) { showScreen('screenLogin'); return; }
-    // user token ที่หาย area = session เสีย → login ใหม่
     if (!area && role === 'user') { sessionStorage.clear(); showScreen('screenLogin'); return; }
     if (!area) { showScreen('screenArea'); return; }
     applyArea(area, role);
@@ -357,30 +337,52 @@
 
   /* ===== Login ===== */
   async function doLogin() {
-    const input  = document.getElementById('loginInput');
-    const err    = document.getElementById('loginError');
-    const hashed = await hashStr(input.value);
-    const found  = TOKEN_MAP[hashed];
-    if (found) {
-      sessionStorage.setItem('mea_token', input.value);
-      sessionStorage.setItem('mea_role',  found.role);
-      err.textContent = '';
-      input.classList.remove('error');
+    const input = document.getElementById('loginInput');
+    const err   = document.getElementById('loginError');
+    const btn   = document.querySelector('#screenLogin .btn-primary');
+    const token = input.value.trim();
+    if (!token) { err.textContent = 'กรุณากรอกรหัสผ่าน'; return; }
+
+    btn.disabled    = true;
+    btn.textContent = 'กำลังตรวจสอบ...';
+    err.textContent = '';
+    input.classList.remove('error');
+
+    try {
+      const ctrl  = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res   = await fetch(
+        `${SCRIPT_URL}?action=verify&token=${encodeURIComponent(token)}&t=${Date.now()}`,
+        { signal: ctrl.signal, redirect: 'follow' }
+      );
+      clearTimeout(timer);
+      if (!res.ok) throw new Error('http');
+      const data = await res.json();
+      if (!data.valid) throw new Error('invalid');
+
+      sessionStorage.setItem('mea_token', token);
+      sessionStorage.setItem('mea_role',  data.role);
       input.value = '';
-      if (found.role === 'user') {
-        sessionStorage.setItem('mea_area', found.area);
-        applyArea(found.area, 'user');
+
+      if (data.role === 'user') {
+        sessionStorage.setItem('mea_area', data.area);
+        applyArea(data.area, 'user');
         showScreen('screenMenu');
       } else {
         const area = sessionStorage.getItem('mea_area');
         if (area) { applyArea(area, 'master'); showScreen('screenMenu'); }
         else       { showScreen('screenArea'); }
       }
-    } else {
-      err.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
+    } catch(e) {
+      err.textContent = e.message === 'invalid'
+        ? 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่'
+        : 'ไม่สามารถเชื่อมต่อได้ กรุณาลองใหม่';
       input.classList.add('error');
       input.value = '';
       input.focus();
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'เข้าสู่ระบบ';
     }
   }
 
@@ -419,11 +421,7 @@
   }
 
   /* ===== Boot ===== */
-  async function init() {
-    await buildTokenMap();
-    checkLogin();
-  }
-  init();
+  checkLogin();
 </script>
 </body>
 </html>

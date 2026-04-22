@@ -802,6 +802,7 @@
   let   SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbziuDE16i0jq4knGer6xqBByV1Kb2BjyHeF9bt8FJID5TLK7EhZeFwPqUb4scvMgdPK/exec';
 
   /* ===== State ===== */
+  let currentToken = null;
   let currentArea  = null;
   let selectedDate = null;
   let records      = [];
@@ -830,10 +831,10 @@
     try {
       const ctrl  = new AbortController();
       const timer = setTimeout(() => ctrl.abort(), 10000);
-      const res   = await fetch(SCRIPT_URL + '?t=' + Date.now(), {
-        signal: ctrl.signal,
-        redirect: 'follow',
-      });
+      const res   = await fetch(
+        `${SCRIPT_URL}?t=${Date.now()}&token=${encodeURIComponent(currentToken || '')}`,
+        { signal: ctrl.signal, redirect: 'follow' }
+      );
       clearTimeout(timer);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
@@ -895,6 +896,7 @@
       window.location.href = 'index.html';
       return;
     }
+    currentToken = token;
     currentArea  = area;
     selectedDate = fmtDate(today);
     document.getElementById('currentAreaLabel').textContent =
@@ -1166,7 +1168,7 @@
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST',
-          body: new URLSearchParams({ action: 'delete', row: rowNum })
+          body: new URLSearchParams({ action: 'delete', row: rowNum, token: currentToken || '' })
         });
         showToast('ลบรายการเรียบร้อย ✓');
         setTimeout(loadRecords, 1500);
@@ -1238,6 +1240,7 @@
       const action = isEdit ? 'update' : 'add';
       const body   = new URLSearchParams({
         action,
+        token: currentToken || '',
         data: JSON.stringify(isEdit ? { row: savedRow, ...record } : record),
         ...(isEdit ? { row: savedRow } : {})
       });
