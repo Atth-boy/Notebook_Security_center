@@ -281,7 +281,7 @@
         <span id="menuAreaLabel">—</span>
       </span>
       <div class="btn-settings-group">
-        <button class="btn-settings" onclick="changeArea()" title="เปลี่ยนพื้นที่">
+        <button id="btnChangeArea" class="btn-settings" onclick="changeArea()" title="เปลี่ยนพื้นที่">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9"/><path d="M13.5 2.5v2.6h-2.6"/></svg>
           เปลี่ยนพื้นที่
         </button>
@@ -314,13 +314,26 @@
 </div>
 
 <script>
-  /* ===== TODO: ย้าย hash ไป Apps Script เมื่อพร้อม ===== */
-  // SHA-256 of 'mea'
-  const SYSTEM_PW_HASH = 'dcb0e34fce1a4824ad5f473de3e4512a89579f6783466dcc5921a85c1bc234d6';
+  /* ===== Token Config (client-side ชั่วคราว — ย้ายไป Apps Script เมื่อพร้อม) ===== */
+  // role: 'master' = เลือกพื้นที่เองได้ทุกศูนย์ | 'user' = ล็อกพื้นที่ตาม token
+  const TOKEN_CONFIG = [
+    { plain: 'mea',  role: 'master', area: null          },
+    { plain: '0414', role: 'user',   area: 'บางแค'       },
+    { plain: '0415', role: 'user',   area: 'บางบัวทอง'   },
+    { plain: '0418', role: 'user',   area: 'พระประแดง'   },
+    { plain: '0500', role: 'user',   area: 'ภาพรวม'      },
+  ];
+  let TOKEN_MAP = {};  // { hash → { role, area } }
 
   async function hashStr(str) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function buildTokenMap() {
+    for (const t of TOKEN_CONFIG) {
+      TOKEN_MAP[await hashStr(t.plain)] = { role: t.role, area: t.area };
+    }
   }
 
   /* ===== Screen Management ===== */
@@ -329,29 +342,40 @@
     document.getElementById(id).classList.add('active');
   }
 
-  /* ===== Init: เช็ค token ที่มีอยู่ ===== */
+  /* ===== Init: เช็ค session ที่มีอยู่ ===== */
   function checkLogin() {
     const token = sessionStorage.getItem('mea_token');
     const area  = sessionStorage.getItem('mea_area');
+    const role  = sessionStorage.getItem('mea_role');
     if (!token) { showScreen('screenLogin'); return; }
-    if (!area)  { showScreen('screenArea');  return; }
-    applyArea(area);
+    // user token ที่หาย area = session เสีย → login ใหม่
+    if (!area && role === 'user') { sessionStorage.clear(); showScreen('screenLogin'); return; }
+    if (!area) { showScreen('screenArea'); return; }
+    applyArea(area, role);
     showScreen('screenMenu');
   }
 
   /* ===== Login ===== */
   async function doLogin() {
-    const input = document.getElementById('loginInput');
-    const err   = document.getElementById('loginError');
+    const input  = document.getElementById('loginInput');
+    const err    = document.getElementById('loginError');
     const hashed = await hashStr(input.value);
-    if (hashed === SYSTEM_PW_HASH) {
+    const found  = TOKEN_MAP[hashed];
+    if (found) {
       sessionStorage.setItem('mea_token', input.value);
+      sessionStorage.setItem('mea_role',  found.role);
       err.textContent = '';
       input.classList.remove('error');
       input.value = '';
-      const area = sessionStorage.getItem('mea_area');
-      if (area) { applyArea(area); showScreen('screenMenu'); }
-      else       { showScreen('screenArea'); }
+      if (found.role === 'user') {
+        sessionStorage.setItem('mea_area', found.area);
+        applyArea(found.area, 'user');
+        showScreen('screenMenu');
+      } else {
+        const area = sessionStorage.getItem('mea_area');
+        if (area) { applyArea(area, 'master'); showScreen('screenMenu'); }
+        else       { showScreen('screenArea'); }
+      }
     } else {
       err.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่';
       input.classList.add('error');
@@ -365,16 +389,17 @@
     inp.type = inp.type === 'password' ? 'text' : 'password';
   }
 
-  /* ===== Area Selection ===== */
+  /* ===== Area Selection (master เท่านั้น) ===== */
   function selectArea(area) {
     sessionStorage.setItem('mea_area', area);
-    applyArea(area);
+    applyArea(area, 'master');
     showScreen('screenMenu');
   }
 
-  function applyArea(area) {
+  function applyArea(area, role) {
     const label = area === 'ภาพรวม' ? 'ภาพรวมทั้ง 3 ศูนย์' : area;
     document.getElementById('menuAreaLabel').textContent = label;
+    document.getElementById('btnChangeArea').style.display = role === 'user' ? 'none' : '';
   }
 
   /* ===== Settings (เปลี่ยนศูนย์ / logout) ===== */
@@ -394,7 +419,11 @@
   }
 
   /* ===== Boot ===== */
-  checkLogin();
+  async function init() {
+    await buildTokenMap();
+    checkLogin();
+  }
+  init();
 </script>
 </body>
 </html>
