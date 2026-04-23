@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>สมุดบันทึกอุปกรณ์ขัดข้อง / เหตุการณ์ประจำวัน</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Sarabun', 'Segoe UI', sans-serif;
+      background: #f1f5f9;
+      color: #1a202c;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ===== HEADER ===== */
+    header {
+      background: linear-gradient(135deg, #374151, #f97316);
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .header-logo { font-size: 30px; }
+    header h1 { font-size: 18px; font-weight: 700; }
+    header p  { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .header-tag {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar {
+      background: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .toolbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .toolbar-title { font-size: 15px; font-weight: 700; color: #374151; }
+    .count-badge {
+      background: #f97316;
+      color: white;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 1px 2px rgba(249,115,22,0.3);
+    }
+    .count-pending {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fcd34d;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .date-display {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      font-size: 13px;
+      color: #374151;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .btn-add {
+      background: #f97316;
+      color: white;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 2px 6px rgba(249,115,22,0.3);
+      transition: background 0.15s, box-shadow 0.15s;
+    }
+    .btn-add:hover { background: #ea580c; box-shadow: 0 3px 10px rgba(249,115,22,0.4); }
+
+    .btn-icon {
+      background: none;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 15px;
+      color: #64748b;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-icon:hover { border-color: #f97316; color: #f97316; }
+
+    /* ===== TABLE SECTION ===== */
+    .section-header {
+      padding: 14px 32px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .section-title { font-size: 13px; font-weight: 600; color: #64748b; }
+
+    .table-wrap { padding: 12px 32px 20px; overflow-x: auto; }
+    .table-inner {
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    thead th {
+      background: #374151;
+      color: white;
+      padding: 11px 14px;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+    thead th.th-center { text-align: center; }
+    tbody tr { border-bottom: 1px solid #e9eef5; transition: background 0.12s; }
+    tbody tr:hover { background: #fff7ed; }
+    tbody tr.row-done { opacity: 0.55; }
+    tbody tr.row-cancelled { opacity: 0.45; }
+    tbody tr:last-child { border-bottom: none; }
+    td { padding: 10px 14px; vertical-align: middle; }
+    td.td-num { text-align: center; color: #64748b; font-weight: 500; width: 40px; }
+
+    /* Title cell */
+    .title-cell-wrap { display: flex; align-items: center; gap: 6px; }
+    .title-text { font-weight: 600; color: #1a202c; }
+    .loc-text { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .overdue-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #ef4444; color: white;
+      font-size: 10px; font-weight: 800;
+      min-width: 18px; height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse-badge 1.5s infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+      50%       { box-shadow: 0 0 0 4px rgba(239,68,68,0); }
+    }
+
+    /* Detail cell */
+    .detail-cell {
+      color: #475569; font-size: 12px;
+      max-width: 180px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .detail-none { color: #cbd5e0; font-size: 12px; }
+
+    /* Datetime cell */
+    .dt-text { font-size: 12px; color: #64748b; white-space: nowrap; }
+    .dt-text.overdue { color: #ef4444; font-weight: 600; }
+    .dt-none { color: #cbd5e0; font-size: 12px; }
+
+    /* ===== STATUS BADGE ===== */
+    .sbadge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .sbadge-new       { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e0; }
+    .sbadge-ongoing   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+    .sbadge-done      { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+    .sbadge-cancelled { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .dot-gray   { background: #94a3b8; }
+    .dot-amber  { background: #f59e0b; }
+    .dot-green  { background: #10b981; }
+    .dot-red    { background: #ef4444; }
+
+    /* ===== ACTION BUTTONS (segmented) ===== */
+    .act-wrap { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; }
+
+    .seg-group {
+      display: inline-flex;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 7px;
+      overflow: hidden;
+    }
+    .seg-btn {
+      padding: 5px 13px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; border-right: 1px solid #e2e8f0;
+      background: white; white-space: nowrap; color: #64748b;
+      transition: background 0.12s, color 0.12s;
+    }
+    .seg-btn:last-child { border-right: none; }
+    .seg-ongoing:not(.is-active):hover   { background: #fef3c7; color: #92400e; }
+    .seg-ongoing.is-active               { background: #f59e0b; color: white; }
+    .seg-done:not(.is-active):hover      { background: #d1fae5; color: #065f46; }
+    .seg-done.is-active                  { background: #10b981; color: white; }
+    .seg-cancelled:not(.is-active):hover { background: #f1f5f9; color: #475569; }
+    .seg-cancelled.is-active             { background: #94a3b8; color: white; }
+    /* edit/delete */
+    .act-edit {
+      background: none; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 4px 8px; cursor: pointer; font-size: 13px; color: #64748b;
+      transition: all 0.12s; line-height: 1;
+    }
+    .act-edit:hover { border-color: #f97316; color: #f97316; background: #fff7ed; }
+    .act-del {
+      background: none; border: 1px solid #e2e8f0; border-radius: 6px;
+      padding: 4px 8px; cursor: pointer; font-size: 13px; color: #94a3b8;
+      transition: all 0.12s; line-height: 1;
+    }
+    .act-del:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center; padding: 60px 20px;
+      color: #94a3b8; background: white;
+    }
+    .empty-icon { font-size: 52px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; margin-bottom: 6px; }
+
+    /* ===== MODAL ===== */
+    .overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.48); z-index: 300;
+      align-items: center; justify-content: center;
+    }
+    .overlay.active { display: flex; }
+    .modal {
+      background: white; border-radius: 14px;
+      width: 560px; max-width: 96vw;
+      max-height: 92vh; overflow-y: auto;
+      padding: 28px 30px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+    }
+    .modal-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .modal-hdr h2 { font-size: 17px; font-weight: 700; color: #374151; }
+    .btn-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 20px; color: #94a3b8; padding: 4px; line-height: 1;
+      border-radius: 4px; transition: color 0.12s;
+    }
+    .btn-close:hover { color: #374151; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .field label {
+      display: block; font-size: 13px; font-weight: 600;
+      color: #374151; margin-bottom: 6px;
+    }
+    .field label .req { color: #ef4444; margin-left: 2px; }
+    .field input, .field textarea {
+      width: 100%; padding: 9px 12px;
+      border: 1px solid #cbd5e0; border-radius: 7px;
+      font-family: inherit; font-size: 13px; outline: none;
+      transition: border-color 0.15s; background: white;
+      color: #1a202c;
+    }
+    .field textarea { resize: vertical; min-height: 80px; }
+    .field input:focus, .field textarea:focus { border-color: #f97316; }
+    .dt-row { display: flex; align-items: center; gap: 8px; }
+    .dt-row input { flex: 1; min-width: 0; }
+    .dt-sep { color: #94a3b8; font-size: 13px; flex-shrink: 0; }
+    .field-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+    .modal-ftr {
+      display: flex; justify-content: flex-end; gap: 10px;
+      margin-top: 24px; padding-top: 18px;
+      border-top: 1px solid #e2e8f0;
+    }
+    .btn-mcancel {
+      padding: 9px 22px; border: 1px solid #cbd5e0; border-radius: 7px;
+      background: white; cursor: pointer; font-family: inherit;
+      font-size: 13px; color: #374151; transition: background 0.12s;
+    }
+    .btn-mcancel:hover { background: #f9fafb; }
+    .btn-msave {
+      padding: 9px 26px; background: #f97316; color: white;
+      border: none; border-radius: 7px; cursor: pointer;
+      font-family: inherit; font-size: 13px; font-weight: 700;
+      transition: background 0.12s;
+    }
+    .btn-msave:hover { background: #ea580c; }
+
+    /* ===== SYNC BAR ===== */
+    .sync-bar {
+      position: sticky; bottom: 0;
+      background: #f8fafc; border-top: 1px solid #e9eef5;
+      padding: 7px 32px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: #64748b;
+      z-index: 10;
+    }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; flex-shrink: 0; }
+    .sync-dot.syncing { background: #3b82f6; animation: blink 0.8s infinite; }
+    .sync-dot.error   { background: #ef4444; }
+    .sync-dot.warn    { background: #f59e0b; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    #syncNext { margin-left: auto; color: #94a3b8; white-space: nowrap; }
+
+    /* ===== MOBILE CARDS ===== */
+    #cardContainer { display: none; padding: 0 16px 16px; }
+    .rcard {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.09);
+      padding: 14px 16px; margin-bottom: 10px;
+      border-left: 4px solid #e2e8f0;
+    }
+    .rcard.s-new      { border-left-color: #94a3b8; }
+    .rcard.s-ongoing  { border-left-color: #f59e0b; }
+    .rcard.s-done     { border-left-color: #10b981; opacity: 0.6; }
+    .rcard.s-cancelled{ border-left-color: #e2e8f0; opacity: 0.5; }
+    .rcard-title { font-size: 15px; font-weight: 700; color: #1a202c; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .rcard-meta  { font-size: 12px; color: #64748b; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .rcard-detail { font-size: 13px; color: #374151; margin-bottom: 10px; }
+    .rcard-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    /* ===== FAB (floating action button) ===== */
+    .fab {
+      position: fixed;
+      bottom: 52px; right: 24px;
+      background: #374151;
+      color: white;
+      border: none; border-radius: 999px;
+      padding: 11px 20px;
+      font-family: inherit; font-size: 13px; font-weight: 700;
+      cursor: pointer; z-index: 100;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.22);
+      display: flex; align-items: center; gap: 8px;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+      white-space: nowrap;
+    }
+    .fab:hover  { background: #1f2937; box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+    .fab:active { transform: scale(0.97); }
+
+    /* ===== SUMMARY MODAL ===== */
+    .sum-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.48); z-index: 400;
+      align-items: center; justify-content: center;
+    }
+    .sum-overlay.active { display: flex; }
+    .sum-modal {
+      background: white; border-radius: 14px;
+      width: 620px; max-width: 96vw; max-height: 88vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+      overflow: hidden;
+    }
+    .sum-hdr {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .sum-hdr h2 { font-size: 16px; font-weight: 700; color: #374151; }
+    .sum-hdr-right { display: flex; align-items: center; gap: 8px; }
+    .btn-copy {
+      padding: 7px 16px;
+      background: #f97316; color: white; border: none;
+      border-radius: 7px; font-family: inherit;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      transition: background 0.12s;
+    }
+    .btn-copy:hover { background: #ea580c; }
+    .btn-copy.copied { background: #10b981; }
+    .sum-body {
+      flex: 1; overflow-y: auto; padding: 16px 20px;
+    }
+    .sum-textarea {
+      width: 100%; min-height: 360px;
+      border: 1px solid #e2e8f0; border-radius: 8px;
+      padding: 14px 16px;
+      font-family: 'Sarabun', 'Segoe UI', monospace;
+      font-size: 13px; line-height: 1.9;
+      color: #1a202c; background: #f8fafc;
+      resize: none; outline: none;
+      white-space: pre; overflow-x: auto;
+    }
+    .sum-footer {
+      padding: 12px 22px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px; color: #94a3b8;
+      flex-shrink: 0;
+    }
+
+    /* ===== TOAST ===== */
+    .toast {
+      position: fixed; bottom: 60px; right: 24px;
+      background: #16a34a; color: white;
+      padding: 11px 20px; border-radius: 8px;
+      font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 0.25s, transform 0.25s;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.terror { background: #dc2626; }
+    .toast.twarn  { background: #d97706; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 640px) {
+      header { padding: 12px 14px; }
+      header h1 { font-size: 14px; }
+      header p  { display: none; }
+      .toolbar  { padding: 8px 14px; }
+      .toolbar-title { font-size: 13px; }
+      .date-display { font-size: 12px; padding: 5px 10px; }
+      .section-header { padding: 10px 14px 0; }
+      .table-wrap  { display: none; }
+      #cardContainer { display: block; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-grid .full { grid-column: 1; }
+      .modal { padding: 20px 16px; }
+      .sync-bar { padding: 6px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-left">
+    <div class="header-logo">🔧</div>
+    <div>
+      <h1>สมุดบันทึกอุปกรณ์ขัดข้อง / เหตุการณ์ประจำวัน</h1>
+      <p>กองสถานีไฟฟ้า — บันทึก ติดตาม และแจ้งสถานะเหตุการณ์</p>
+    </div>
+  </div>
+  <div>
+    <span class="header-tag">กสฟ.</span>
+  </div>
+</header>
+
+<!-- ===== TOOLBAR ===== -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <span class="toolbar-title">รายการทั้งหมด</span>
+    <span class="count-badge" id="countAll">0</span>
+    <span class="count-pending" id="countPending">ค้างอยู่ 0</span>
+  </div>
+  <div class="toolbar-right">
+    <div class="date-display">📅 <span id="currentDateLabel">—</span></div>
+    <button class="btn-icon" onclick="render()" title="รีเฟรช">🔄</button>
+    <button class="btn-add" onclick="openForm()">＋ เพิ่มรายการ</button>
+  </div>
+</div>
+
+<!-- ===== TABLE ===== -->
+<div class="table-wrap">
+  <div class="table-inner" id="tableInner"></div>
+</div>
+
+<!-- ===== CARD VIEW (mobile) ===== -->
+<div id="cardContainer"></div>
+
+<!-- ===== SYNC BAR ===== -->
+<div class="sync-bar">
+  <div class="sync-dot" id="syncDot"></div>
+  <span id="syncLabel">บันทึกอัตโนมัติทุกวันเวลา 23:59 น.</span>
+  <span id="syncNext"></span>
+</div>
+
+<!-- ===== FORM MODAL ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h2 id="modalTitle">เพิ่มรายการใหม่</h2>
+      <button class="btn-close" onclick="closeForm()">✕</button>
+    </div>
+    <div class="form-grid">
+      <div class="field full">
+        <label>หัวข้อ <span class="req">*</span></label>
+        <input type="text" id="fTitle" placeholder="ระบุหัวข้อเหตุการณ์หรืออุปกรณ์ที่ขัดข้อง" autocomplete="off" />
+      </div>
+      <div class="field full">
+        <label>สถานที่ <span class="req">*</span></label>
+        <input type="text" id="fLocation" placeholder="เช่น สถานีย่อยบางแค, ตู้ควบคุม A3" autocomplete="off" />
+      </div>
+      <div class="field full">
+        <label>รายละเอียด</label>
+        <textarea id="fDetail" rows="3" placeholder="บรรยายรายละเอียดเพิ่มเติม (ถ้ามี)..."></textarea>
+      </div>
+      <div class="field full">
+        <label>วันและเวลาเริ่มต้น</label>
+        <div class="dt-row">
+          <input type="date" id="fDateStart" />
+          <input type="time" id="fTimeStart" />
+        </div>
+      </div>
+      <div class="field full">
+        <label>วันและเวลาสิ้นสุด</label>
+        <div class="dt-row">
+          <input type="date" id="fDateEnd" />
+          <input type="time" id="fTimeEnd" />
+        </div>
+        <p class="field-hint">หากถึงกำหนดแล้วยังไม่เสร็จ จะแสดงสัญลักษณ์ <strong style="color:#ef4444">!</strong> แจ้งเตือน</p>
+      </div>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn-mcancel" onclick="closeForm()">ยกเลิก</button>
+      <button class="btn-msave" onclick="submitForm()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FAB ===== -->
+<button class="fab" onclick="openSummary()">📋 สรุปรายการ</button>
+
+<!-- ===== SUMMARY MODAL ===== -->
+<div class="sum-overlay" id="sumOverlay">
+  <div class="sum-modal">
+    <div class="sum-hdr">
+      <h2>สรุปรายการประจำวัน</h2>
+      <div class="sum-hdr-right">
+        <button class="btn-copy" id="btnCopy" onclick="copySummary()">คัดลอกข้อความ</button>
+        <button class="btn-close" onclick="closeSummary()">✕</button>
+      </div>
+    </div>
+    <div class="sum-body">
+      <textarea class="sum-textarea" id="sumText" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="sum-footer" id="sumFooter"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ===== Config ===== */
+  const SCRIPT_URL  = '';            // TODO: วาง Apps Script URL ตรงนี้ (URL เดียวกับ page2)
+  const P3_TOKEN    = 'substation';  // token ใช้ร่วมกับระบบเดิม (master token)
+  const STORAGE_KEY = 'p3_records';
+  const SYNC_KEY    = 'p3_last_sync';
+
+  /* ===== State ===== */
+  let records = [];
+  let editId  = null;
+
+  /* ============================================================
+     INIT
+  ============================================================ */
+  window.addEventListener('DOMContentLoaded', () => {
+    loadFromStorage();
+    render();
+    startScheduler();
+    document.getElementById('overlay').addEventListener('click', e => {
+      if (e.target === document.getElementById('overlay')) closeForm();
+    });
+  });
+
+  /* ============================================================
+     STORAGE
+  ============================================================ */
+  function loadFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        records = JSON.parse(raw);
+      } else {
+        records = seedDemo();
+        saveToStorage();
+      }
+    } catch {
+      records = [];
+    }
+  }
+
+  function saveToStorage() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  }
+
+  /* ===== Demo data (first run only) ===== */
+  function seedDemo() {
+    const today = fmtDateStr(new Date());
+    const yesterday = fmtDateStr(addDays(new Date(), -1));
+    const tomorrow  = fmtDateStr(addDays(new Date(),  2));
+    return [
+      {
+        id: 'demo1', title: 'หม้อแปลงไฟฟ้าขัดข้อง — เกิดความร้อนสูงผิดปกติ',
+        location: 'สถานีย่อยบางแค', detail: 'หม้อแปลงหลักตรวจพบอุณหภูมิสูงกว่า 85°C รอช่างเฉพาะทางเข้าตรวจสอบ',
+        dateStart: today, timeStart: '08:30',
+        dateEnd: yesterday, timeEnd: '17:00',
+        status: 'ongoing', createdAt: Date.now(), updatedAt: Date.now()
+      },
+      {
+        id: 'demo2', title: 'ตรวจสอบระบบแจ้งเตือนอัตโนมัติ SCADA',
+        location: 'สถานีต้นทางถนนตก', detail: 'ระบบ SCADA แสดง Alarm สัญญาณผิดปกติที่ Feeder 12',
+        dateStart: today, timeStart: '09:00',
+        dateEnd: tomorrow, timeEnd: '16:00',
+        status: 'new', createdAt: Date.now(), updatedAt: Date.now()
+      },
+      {
+        id: 'demo3', title: 'ซ่อมบำรุงประจำปี Breaker สาย 115 kV',
+        location: 'สถานีย่อยนนทรี', detail: '',
+        dateStart: today, timeStart: '07:00',
+        dateEnd: today, timeEnd: '12:00',
+        status: 'done', createdAt: Date.now(), updatedAt: Date.now()
+      },
+      {
+        id: 'demo4', title: 'แจ้งเหตุไฟฟ้าดับบริเวณโซน A',
+        location: 'สถานีย่อยพรานนก', detail: 'ลูกค้าแจ้งเข้ามาหลายรายว่าไฟดับ กำลังตรวจสอบสาเหตุ',
+        dateStart: '', timeStart: '',
+        dateEnd: '', timeEnd: '',
+        status: 'new', createdAt: Date.now(), updatedAt: Date.now()
+      },
+    ];
+  }
+
+  /* ============================================================
+     DATE HELPERS
+  ============================================================ */
+  function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+  function fmtDateStr(d) {
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function fmtThLong(d) {
+    const days   = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+    const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    return `วัน${days[d.getDay()]}ที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+  }
+
+  function fmtDisplay(dateStr, timeStr) {
+    if (!dateStr) return null;
+    const [y, m, dy] = dateStr.split('-').map(Number);
+    const ms = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.',
+                'ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    const base = `${dy} ${ms[m-1]} ${y + 543}`;
+    return timeStr ? `${base} ${timeStr}` : base;
+  }
+
+  function isOverdue(rec) {
+    if (!rec.dateEnd) return false;
+    if (rec.status === 'done' || rec.status === 'cancelled') return false;
+    const endDt = new Date(rec.dateEnd + 'T' + (rec.timeEnd || '23:59'));
+    return new Date() > endDt;
+  }
+
+  /* ============================================================
+     RENDER
+  ============================================================ */
+  function render() {
+    document.getElementById('currentDateLabel').textContent = fmtThLong(new Date());
+
+    const active = records.filter(r => r.status !== 'done' && r.status !== 'cancelled').length;
+    document.getElementById('countAll').textContent     = `${records.length} รายการ`;
+    document.getElementById('countPending').textContent = `ค้างอยู่ ${active} รายการ`;
+
+    renderTable();
+    renderCards();
+    updateSyncBar();
+  }
+
+  /* ===== TABLE ===== */
+  function renderTable() {
+    const wrap = document.getElementById('tableInner');
+
+    if (records.length === 0) {
+      wrap.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <p style="font-size:15px;font-weight:600;color:#374151">ยังไม่มีรายการบันทึก</p>
+          <p>กดปุ่ม <strong style="color:#f97316">＋ เพิ่มรายการ</strong> เพื่อเริ่มต้น</p>
+        </div>`;
+      return;
+    }
+
+    const rows = records.map((r, i) => {
+      const ov     = isOverdue(r);
+      const odBadge = ov ? `<span class="overdue-badge" title="เกินกำหนดแล้ว">!</span>` : '';
+      const dtEnd   = fmtDisplay(r.dateEnd, r.timeEnd);
+      const dtStart = fmtDisplay(r.dateStart, r.timeStart);
+      const rowCls  = r.status === 'done' ? 'row-done' : r.status === 'cancelled' ? 'row-cancelled' : '';
+
+      return `<tr class="${rowCls}">
+        <td class="td-num">${i + 1}</td>
+        <td>
+          <div class="title-cell-wrap">
+            <span class="title-text">${esc(r.title)}</span>${odBadge}
+          </div>
+          <div class="loc-text">📍 ${esc(r.location)}</div>
+        </td>
+        <td>${r.detail
+              ? `<div class="detail-cell">${esc(r.detail)}</div>`
+              : `<span class="detail-none">—</span>`}</td>
+        <td>${dtStart ? `<span class="dt-text">${dtStart}</span>` : `<span class="dt-none">—</span>`}</td>
+        <td>${dtEnd
+              ? `<span class="dt-text ${ov ? 'overdue' : ''}">${dtEnd}${ov ? ' ⚠' : ''}</span>`
+              : `<span class="dt-none">—</span>`}</td>
+        <td>${renderBadge(r.status)}</td>
+        <td>
+          <div class="act-wrap">
+            ${segGroup(r.id, r.status)}
+            <button class="act-edit" onclick="openForm('${r.id}')" title="แก้ไข">✏️</button>
+            <button class="act-del"  onclick="delRecord('${r.id}')" title="ลบ">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+    wrap.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th class="th-center">#</th>
+            <th>หัวข้อ / สถานที่</th>
+            <th style="min-width:160px">รายละเอียด</th>
+            <th>วันเวลาเริ่มต้น</th>
+            <th>วันเวลาสิ้นสุด</th>
+            <th>สถานะ</th>
+            <th style="min-width:340px">ดำเนินการ</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`;
+  }
+
+  function segGroup(id, status) {
+    const s = (type, label) => {
+      const active = status === type ? 'is-active' : '';
+      return `<button class="seg-btn seg-${type} ${active}" onclick="setStatus('${id}','${type}')">${label}</button>`;
+    };
+    return `<div class="seg-group">
+      ${s('ongoing',   'ระหว่างดำเนินการ')}
+      ${s('done',      'เสร็จสิ้น')}
+      ${s('cancelled', 'ยกเลิก')}
+    </div>`;
+  }
+
+  function renderBadge(status) {
+    const map = {
+      new:       `<span class="sbadge sbadge-new"><span class="dot dot-gray"></span>แจ้งใหม่</span>`,
+      ongoing:   `<span class="sbadge sbadge-ongoing"><span class="dot dot-amber"></span>ระหว่างดำเนินการ</span>`,
+      done:      `<span class="sbadge sbadge-done"><span class="dot dot-green"></span>เสร็จสิ้น</span>`,
+      cancelled: `<span class="sbadge sbadge-cancelled"><span class="dot dot-red"></span>ยกเลิก</span>`,
+    };
+    return map[status] || map.new;
+  }
+
+  /* ===== CARDS (mobile) ===== */
+  function renderCards() {
+    const wrap = document.getElementById('cardContainer');
+    if (records.length === 0) { wrap.innerHTML = ''; return; }
+
+    wrap.innerHTML = records.map(r => {
+      const ov = isOverdue(r);
+      const odBadge = ov ? `<span class="overdue-badge">!</span>` : '';
+      const dtEnd   = fmtDisplay(r.dateEnd, r.timeEnd);
+      return `
+        <div class="rcard s-${r.status || 'new'}">
+          <div class="rcard-title">${esc(r.title)} ${odBadge}</div>
+          <div class="rcard-meta">
+            <span>📍 ${esc(r.location)}</span>
+            ${renderBadge(r.status)}
+            ${dtEnd ? `<span style="${ov?'color:#ef4444;font-weight:600':''}">⏰ ${dtEnd}</span>` : ''}
+          </div>
+          ${r.detail ? `<div class="rcard-detail">${esc(r.detail)}</div>` : ''}
+          <div class="rcard-btns">
+            ${segGroup(r.id, r.status)}
+            <button class="act-edit" onclick="openForm('${r.id}')">✏️</button>
+            <button class="act-del"  onclick="delRecord('${r.id}')">🗑️</button>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  /* ============================================================
+     ACTIONS
+  ============================================================ */
+  function setStatus(id, status) {
+    const rec = records.find(r => r.id === id);
+    if (!rec) return;
+    rec.status    = status;
+    rec.updatedAt = Date.now();
+    saveToStorage();
+    render();
+    const labels = { ongoing: 'อยู่ระหว่างดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิกแล้ว' };
+    showToast(`อัปเดต: ${labels[status] || status}`);
+  }
+
+  function delRecord(id) {
+    if (!confirm('ยืนยันการลบรายการนี้ออกจากระบบ?')) return;
+    records = records.filter(r => r.id !== id);
+    saveToStorage();
+    render();
+    showToast('ลบรายการแล้ว', 'twarn');
+  }
+
+  /* ============================================================
+     FORM
+  ============================================================ */
+  function openForm(id = null) {
+    editId = id;
+    document.getElementById('modalTitle').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มรายการใหม่';
+
+    const r = id ? records.find(x => x.id === id) : null;
+    document.getElementById('fTitle').value     = r?.title     || '';
+    document.getElementById('fLocation').value  = r?.location  || '';
+    document.getElementById('fDetail').value    = r?.detail    || '';
+    document.getElementById('fDateStart').value = r?.dateStart || '';
+    document.getElementById('fTimeStart').value = r?.timeStart || '';
+    document.getElementById('fDateEnd').value   = r?.dateEnd   || '';
+    document.getElementById('fTimeEnd').value   = r?.timeEnd   || '';
+
+    document.getElementById('overlay').classList.add('active');
+    setTimeout(() => document.getElementById('fTitle').focus(), 80);
+  }
+
+  function closeForm() {
+    document.getElementById('overlay').classList.remove('active');
+    editId = null;
+  }
+
+  function submitForm() {
+    const title    = document.getElementById('fTitle').value.trim();
+    const location = document.getElementById('fLocation').value.trim();
+    const detail   = document.getElementById('fDetail').value.trim();
+    const dateStart = document.getElementById('fDateStart').value;
+    const timeStart = document.getElementById('fTimeStart').value;
+    const dateEnd   = document.getElementById('fDateEnd').value;
+    const timeEnd   = document.getElementById('fTimeEnd').value;
+
+    if (!title)    { shake('fTitle');    return; }
+    if (!location) { shake('fLocation'); return; }
+
+    if (editId) {
+      const rec = records.find(r => r.id === editId);
+      if (rec) Object.assign(rec, { title, location, detail, dateStart, timeStart, dateEnd, timeEnd, updatedAt: Date.now() });
+    } else {
+      records.push({
+        id: `r${Date.now()}${Math.random().toString(36).slice(2,6)}`,
+        title, location, detail,
+        dateStart, timeStart, dateEnd, timeEnd,
+        status: 'new',
+        createdAt: Date.now(), updatedAt: Date.now()
+      });
+    }
+
+    saveToStorage();
+    closeForm();
+    render();
+    showToast(editId ? 'แก้ไขรายการแล้ว ✓' : 'เพิ่มรายการใหม่แล้ว ✓');
+  }
+
+  function shake(inputId) {
+    const el = document.getElementById(inputId);
+    el.style.borderColor = '#ef4444';
+    el.focus();
+    el.animate([
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(4px)'  },
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(0)'    },
+    ], { duration: 280 });
+    setTimeout(() => { el.style.borderColor = ''; }, 1500);
+  }
+
+  /* ============================================================
+     AUTO-SAVE SCHEDULER (23:59 ทุกวัน)
+  ============================================================ */
+  function startScheduler() {
+    updateSyncBar();
+    setInterval(() => {
+      const now = new Date();
+      if (now.getHours() === 23 && now.getMinutes() === 59) {
+        const todayStr = fmtDateStr(now);
+        if (localStorage.getItem(SYNC_KEY) !== todayStr) {
+          triggerAutoSave(todayStr);
+        }
+      }
+      updateSyncBar();
+    }, 60_000);
+  }
+
+  async function triggerAutoSave(dateStr) {
+    setSyncState('syncing', 'กำลังบันทึกลง Google Sheet...');
+    try {
+      if (SCRIPT_URL) {
+        // ส่ง action + token เป็น URL params, records เป็น JSON body
+        const url = `${SCRIPT_URL}?action=saveDailyLog&date=${encodeURIComponent(dateStr)}&token=${encodeURIComponent(P3_TOKEN)}`;
+        const ctrl  = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 15000);
+        const res = await fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({ date: dateStr, records }),
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          signal: ctrl.signal,
+          redirect: 'follow'
+        });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (data.status !== 'ok') throw new Error(data.msg || 'script error');
+      }
+      /* หลังบันทึกสำเร็จ: ลบรายการเสร็จสิ้น/ยกเลิกออก */
+      records = records.filter(r => r.status !== 'done' && r.status !== 'cancelled');
+      saveToStorage();
+      localStorage.setItem(SYNC_KEY, dateStr);
+      render();
+      setSyncState('ok', `บันทึกอัตโนมัติสำเร็จ (${dateStr} เวลา 23:59 น.)`);
+      showToast('บันทึกข้อมูลลง Google Sheet สำเร็จ ✓');
+    } catch (err) {
+      setSyncState('error', `บันทึกไม่สำเร็จ: ${err.message}`);
+      showToast('บันทึก Google Sheet ไม่สำเร็จ', 'terror');
+    }
+  }
+
+  function setSyncState(state, label) {
+    document.getElementById('syncDot').className   = `sync-dot ${state !== 'ok' ? state : ''}`;
+    document.getElementById('syncLabel').textContent = label;
+  }
+
+  function updateSyncBar() {
+    const now  = new Date();
+    const next = new Date(now);
+    next.setHours(23, 59, 0, 0);
+    if (now >= next) next.setDate(next.getDate() + 1);
+    const diff = next - now;
+    const hh   = Math.floor(diff / 3_600_000);
+    const mm   = Math.floor((diff % 3_600_000) / 60_000);
+    document.getElementById('syncNext').textContent = `บันทึกอัตโนมัติถัดไปใน ${hh} ชม. ${mm} นาที`;
+
+    const lastSync = localStorage.getItem(SYNC_KEY);
+    if (lastSync === fmtDateStr(now)) {
+      setSyncState('ok', `บันทึกล่าสุด: ${lastSync} เวลา 23:59 น.`);
+    }
+  }
+
+  /* ===== Manual save button (debug) ===== */
+  function manualSave() {
+    triggerAutoSave(fmtDateStr(new Date()));
+  }
+
+  /* ============================================================
+     UTILS
+  ============================================================ */
+  let toastTimer = null;
+  function showToast(msg, cls = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className   = `toast show ${cls}`;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  /* ============================================================
+     SUMMARY POPUP
+  ============================================================ */
+  function openSummary() {
+    document.getElementById('sumText').value = buildSummaryText();
+    const active   = records.filter(r => r.status !== 'done' && r.status !== 'cancelled').length;
+    const done     = records.filter(r => r.status === 'done').length;
+    const cancelled= records.filter(r => r.status === 'cancelled').length;
+    document.getElementById('sumFooter').textContent =
+      `รวม ${records.length} รายการ  |  ค้างอยู่ ${active}  |  เสร็จสิ้น ${done}  |  ยกเลิก ${cancelled}`;
+    document.getElementById('btnCopy').textContent = 'คัดลอกข้อความ';
+    document.getElementById('btnCopy').classList.remove('copied');
+    document.getElementById('sumOverlay').classList.add('active');
+  }
+
+  function closeSummary() {
+    document.getElementById('sumOverlay').classList.remove('active');
+  }
+
+  function buildSummaryText() {
+    const LINE  = '─'.repeat(48);
+    const statusTh = { new: 'แจ้งใหม่', ongoing: 'ระหว่างดำเนินการ', done: 'เสร็จสิ้น', cancelled: 'ยกเลิก' };
+
+    const lines = [];
+    lines.push('สรุปรายการอุปกรณ์ขัดข้อง / เหตุการณ์ประจำวัน');
+    lines.push(fmtThLong(new Date()));
+    lines.push(LINE);
+
+    if (records.length === 0) {
+      lines.push('ไม่มีรายการบันทึก');
+    } else {
+      records.forEach((r, i) => {
+        const ov      = isOverdue(r);
+        const statusTxt = (statusTh[r.status] || r.status) + (ov ? ' ⚠ เกินกำหนด' : '');
+        const dtStart = fmtDisplay(r.dateStart, r.timeStart);
+        const dtEnd   = fmtDisplay(r.dateEnd,   r.timeEnd);
+
+        lines.push(`${i + 1}. ${r.title}`);
+        lines.push(`   สถานที่   : ${r.location}`);
+        if (r.detail) lines.push(`   รายละเอียด: ${r.detail}`);
+        if (dtStart || dtEnd) {
+          const range = [dtStart ? `เริ่ม ${dtStart}` : '', dtEnd ? `สิ้นสุด ${dtEnd}` : '']
+                          .filter(Boolean).join('  —  ');
+          lines.push(`   ระยะเวลา  : ${range}`);
+        }
+        lines.push(`   สถานะ     : ${statusTxt}`);
+        if (i < records.length - 1) lines.push('');
+      });
+    }
+
+    lines.push(LINE);
+    lines.push(`จัดทำโดยระบบสมุดบันทึก กสฟ.  ${new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })} น.`);
+    return lines.join('\n');
+  }
+
+  async function copySummary() {
+    const text = document.getElementById('sumText').value;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      document.getElementById('sumText').select();
+      document.execCommand('copy');
+    }
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = 'คัดลอกแล้ว ✓';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'คัดลอกข้อความ';
+      btn.classList.remove('copied');
+    }, 2500);
+  }
+
+  document.getElementById('sumOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('sumOverlay')) closeSummary();
+  });
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+</script>
+</body>
+</html>
