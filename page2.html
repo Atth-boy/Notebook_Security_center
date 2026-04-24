@@ -9,6 +9,7 @@
     }
   </script>
   <title>บันทึกผู้เข้าปฏิบัติงานในสถานีไฟฟ้า</title>
+  <link rel="stylesheet" href="flatpickr.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -110,7 +111,7 @@
     .date-picker-wrap label {
       font-size: 12px; color: #64748b; white-space: nowrap;
     }
-    .date-picker-wrap input[type="date"] {
+    .date-picker-wrap input.flatpickr-input {
       padding: 6px 10px;
       border: 1px solid #e2e8f0;
       border-radius: 20px;
@@ -120,9 +121,30 @@
       outline: none;
       cursor: pointer;
       transition: border-color 0.15s;
+      background: white;
+      width: 130px;
     }
-    .date-picker-wrap input[type="date"]:focus,
-    .date-picker-wrap input[type="date"]:hover { border-color: #f97316; }
+    .date-picker-wrap input.flatpickr-input:focus,
+    .date-picker-wrap input.flatpickr-input:hover { border-color: #f97316; }
+
+    /* Flatpickr custom theme */
+    .flatpickr-calendar { font-family: 'Sarabun','Segoe UI',sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 12px; border: 1px solid #e2e8f0; }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover { background: #f97316; border-color: #f97316; }
+    .flatpickr-day:hover { background: #fff7ed; border-color: #f97316; }
+    .flatpickr-day.today { border-color: #f97316; }
+    .flatpickr-day.today:hover { background: #fff7ed; }
+    .flatpickr-months .flatpickr-prev-month:hover svg,
+    .flatpickr-months .flatpickr-next-month:hover svg { fill: #f97316; }
+
+    /* dot ใต้วันที่มีงาน */
+    .fp-dot {
+      display: block;
+      width: 5px; height: 5px;
+      background: #f97316;
+      border-radius: 50%;
+      margin: 1px auto 0;
+    }
+    .flatpickr-day { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 38px; line-height: normal; }
 
     /* ===== TOOLBAR ===== */
     .toolbar {
@@ -972,6 +994,8 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="flatpickr.min.js"></script>
+<script src="flatpickr.th.js"></script>
 <script>
   /* ===== Google Sheets Config ===== */
   const SHEET_ID   = '1ZbfpYmviWaMQ8mc8WQz6ZTZN4k0MM17pKloYGO9nVZA';
@@ -1035,6 +1059,7 @@
       records = [];
     }
     render();
+    refreshFlatpickrDots();
   }
 
   function parseCSV(text) {
@@ -1118,13 +1143,13 @@
       `<div class="date-divider"></div>
        <div class="date-picker-wrap">
          <label>เลือกวันอื่น</label>
-         <input type="date" id="datePicker" value="${selectedDate}"
-           onchange="switchDatePicker(this.value)" />
+         <input type="text" id="datePicker" placeholder="เลือกวันที่..." readonly="readonly" />
        </div>
        <button class="btn-back-menu" onclick="changeArea()">
          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2" transform="rotate(180 8 8)"/></svg>
          เลือกระบบ
        </button>`;
+    initFlatpickr();
   }
 
   function switchDate(dateStr, btn) {
@@ -1579,6 +1604,64 @@
     if (to.value && to.value < this.value) to.value = this.value;
     to.min = this.value;
   });
+  /* ===== Flatpickr ===== */
+  let _fp = null;
+
+  function getDatesWithRecords() {
+    const set = new Set();
+    records.forEach(r => {
+      if (!r.dateFrom || !r.dateTo) return;
+      let d = new Date(r.dateFrom + 'T00:00:00');
+      const end = new Date(r.dateTo + 'T00:00:00');
+      while (d <= end) {
+        set.add(fmtDate(d));
+        d.setDate(d.getDate() + 1);
+      }
+    });
+    return set;
+  }
+
+  function initFlatpickr() {
+    if (_fp) { _fp.destroy(); _fp = null; }
+    const input = document.getElementById('datePicker');
+    if (!input || typeof flatpickr === 'undefined') return;
+
+    const datesWithRecords = getDatesWithRecords();
+
+    _fp = flatpickr(input, {
+      locale: typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.th ? 'th' : 'default',
+      dateFormat: 'Y-m-d',
+      defaultDate: selectedDate,
+      disableMobile: true,
+      onChange: (selDates, dateStr) => { if (dateStr) switchDatePicker(dateStr); },
+      onDayCreate: (_dObj, _dStr, _fp, dayElem) => {
+        const ds = fmtDate(dayElem.dateObj);
+        if (datesWithRecords.has(ds)) {
+          const dot = document.createElement('span');
+          dot.className = 'fp-dot';
+          dayElem.appendChild(dot);
+        }
+      },
+      onReady: (_sel, _str, fp) => {
+        fp.setDate(selectedDate, false);
+      }
+    });
+  }
+
+  function refreshFlatpickrDots() {
+    if (!_fp) return;
+    const datesWithRecords = getDatesWithRecords();
+    _fp.config.onDayCreate = [(_dObj, _dStr, _fpi, dayElem) => {
+      const ds = fmtDate(dayElem.dateObj);
+      if (datesWithRecords.has(ds)) {
+        const dot = document.createElement('span');
+        dot.className = 'fp-dot';
+        dayElem.appendChild(dot);
+      }
+    }];
+    _fp.redraw();
+  }
+
   // floating menu ที่ body level — ใช้ร่วมกันทุก card/row
   const _floatMenu = document.createElement('div');
   _floatMenu.className = 'action-menu';
