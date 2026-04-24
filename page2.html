@@ -383,6 +383,143 @@
     .dot-yellow { background:#f59e0b; box-shadow: 0 0 0 2px rgba(245,158,11,0.2); }
     .dot-red    { background:#ef4444; box-shadow: 0 0 0 2px rgba(239,68,68,0.2); }
 
+    /* ===== REPORT MODAL ===== */
+    .report-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 700;
+      align-items: center;
+      justify-content: center;
+    }
+    .report-overlay.active { display: flex; }
+    .report-modal {
+      background: white;
+      border-radius: 14px;
+      width: 680px;
+      max-width: 96vw;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    }
+    .report-modal-header {
+      padding: 22px 26px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .report-modal-header h2 { font-size: 16px; font-weight: 700; color: #374151; }
+    .report-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      gap: 0;
+    }
+    .report-left {
+      width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+    }
+    .report-left-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .report-left-header label {
+      font-size: 12px; font-weight: 600; color: #374151;
+      display: flex; align-items: center; gap: 6px; cursor: pointer;
+    }
+    .report-list {
+      overflow-y: auto;
+      flex: 1;
+      padding: 8px 0;
+    }
+    .report-item {
+      display: flex; align-items: flex-start; gap: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.12s;
+    }
+    .report-item:hover { background: #f8fafc; }
+    .report-item input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; accent-color: #f97316; }
+    .report-item-info { flex: 1; min-width: 0; }
+    .report-item-name { font-size: 13px; font-weight: 600; color: #1a202c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-item-sub { font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .report-right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    .report-right-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .report-right-header span { font-size: 12px; font-weight: 600; color: #374151; }
+    .btn-copy-report {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      background: #f97316; color: white;
+      border: none; border-radius: 6px;
+      font-family: inherit; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .btn-copy-report:hover { background: #ea580c; }
+    .btn-copy-report:disabled { background: #cbd5e0; cursor: default; }
+    .report-preview {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    .report-preview-text {
+      white-space: pre-wrap;
+      font-family: 'Sarabun', 'Segoe UI', sans-serif;
+      font-size: 13px;
+      line-height: 2;
+      color: #1a202c;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px 16px;
+      min-height: 140px;
+    }
+    .report-preview-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 100%; color: #94a3b8; font-size: 13px;
+    }
+    .report-divider-line {
+      border: none; border-top: 1px dashed #cbd5e0;
+      margin: 12px 0;
+    }
+    .btn-report {
+      background: #eff6ff;
+      color: #2563eb;
+      border: 1px solid #bfdbfe;
+      padding: 8px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .btn-report:hover { background: #dbeafe; border-color: #93c5fd; }
+    @media (max-width: 640px) {
+      .report-modal { width: 98vw; max-height: 95vh; }
+      .report-body { flex-direction: column; }
+      .report-left { width: 100%; border-right: none; border-bottom: 1px solid #e2e8f0; max-height: 220px; }
+      .report-right-header span { font-size: 11px; }
+    }
+
     /* ===== TOAST ===== */
     .toast {
       position: fixed;
@@ -508,6 +645,10 @@
   </div>
   <div class="toolbar-right">
     <button onclick="loadRecords()" title="โหลดข้อมูลใหม่" style="background:none;border:1px solid #e2e8f0;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:14px;">🔄</button>
+    <button class="btn-report" id="btnReport" onclick="openReport()">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h6l3 3v9H4V2Z"/><path d="M10 2v3h3"/><path d="M6 7h4M6 10h4"/></svg>
+      สร้างรายงาน
+    </button>
     <button class="btn-add" id="btnAdd" onclick="openForm()">＋ แจ้งความประสงค์เข้าสถานี</button>
   </div>
 </div>
@@ -793,6 +934,42 @@
   </div>
 </div>
 
+<!-- ===== REPORT MODAL ===== -->
+<div class="report-overlay" id="reportOverlay" onclick="if(event.target===this)closeReport()">
+  <div class="report-modal">
+    <div class="report-modal-header">
+      <h2>📄 สร้างรายงาน</h2>
+      <button class="btn-close" onclick="closeReport()">✕</button>
+    </div>
+    <div class="report-body">
+      <!-- ซ้าย: เลือกรายการ -->
+      <div class="report-left">
+        <div class="report-left-header">
+          <label>
+            <input type="checkbox" id="reportSelectAll" onchange="toggleSelectAll(this.checked)" />
+            เลือกทั้งหมด
+          </label>
+          <span id="reportSelectedCount" style="margin-left:auto;font-size:11px;color:#94a3b8;font-weight:600"></span>
+        </div>
+        <div class="report-list" id="reportList"></div>
+      </div>
+      <!-- ขวา: preview -->
+      <div class="report-right">
+        <div class="report-right-header">
+          <span>ตัวอย่างข้อความ</span>
+          <button class="btn-copy-report" id="btnCopyReport" onclick="copyReport()" disabled>
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="8" height="10" rx="1"/><path d="M3 5H2a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1"/></svg>
+            คัดลอกข้อความ
+          </button>
+        </div>
+        <div class="report-preview" id="reportPreview">
+          <div class="report-preview-empty">← เลือกรายการเพื่อดูตัวอย่าง</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -823,6 +1000,8 @@
     const d = new Date(str);
     return isNaN(d.getTime()) ? '' : fmtDate(d);
   }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   /* ===== Load from Google Sheets via Apps Script ===== */
   async function loadRecords() {
@@ -980,7 +1159,6 @@
       const be = parseInt(y)+543;
       return `${parseInt(d)} ${thMonths[parseInt(m)-1]} ${be}`;
     }
-    function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     // Update label
     const isToday = selectedDate === fmtDate(today);
@@ -1287,6 +1465,112 @@
     t.style.background = type === 'error' ? '#ef4444' : type === 'warn' ? '#f59e0b' : '#16a34a';
     t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  /* ===== Report ===== */
+  let reportFiltered = [];
+
+  const thMonthsRpt = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  function thDateRpt(s) {
+    if (!s) return '';
+    const [y,m,d] = s.split('-');
+    return `${parseInt(d)} ${thMonthsRpt[parseInt(m)-1]} ${parseInt(y)+543}`;
+  }
+
+  function openReport() {
+    const isOverview = currentArea === 'ภาพรวม';
+    reportFiltered = records.filter(r =>
+      (isOverview || r.area === currentArea) &&
+      r.dateFrom <= selectedDate && r.dateTo >= selectedDate
+    );
+
+    const list = document.getElementById('reportList');
+    if (reportFiltered.length === 0) {
+      list.innerHTML = '<div style="padding:24px 16px;text-align:center;color:#94a3b8;font-size:13px;">ไม่มีรายการในวันที่เลือก</div>';
+    } else {
+      list.innerHTML = reportFiltered.map((r, i) => `
+        <label class="report-item" for="rck_${i}">
+          <input type="checkbox" id="rck_${i}" value="${i}" onchange="onReportCheck()" />
+          <div class="report-item-info">
+            <div class="report-item-name">${esc(r.name)}</div>
+            <div class="report-item-sub">${esc(r.site)} · ${thDateRpt(r.dateFrom)}${r.dateFrom!==r.dateTo?' – '+thDateRpt(r.dateTo):''}</div>
+          </div>
+        </label>`).join('');
+    }
+
+    document.getElementById('reportSelectAll').checked = false;
+    document.getElementById('reportSelectedCount').textContent = '';
+    document.getElementById('reportPreview').innerHTML = '<div class="report-preview-empty">← เลือกรายการเพื่อดูตัวอย่าง</div>';
+    document.getElementById('btnCopyReport').disabled = true;
+    document.getElementById('reportOverlay').classList.add('active');
+  }
+
+  function closeReport() {
+    document.getElementById('reportOverlay').classList.remove('active');
+  }
+
+  function toggleSelectAll(checked) {
+    document.querySelectorAll('#reportList input[type="checkbox"]').forEach(cb => cb.checked = checked);
+    onReportCheck();
+  }
+
+  function onReportCheck() {
+    const checked = [...document.querySelectorAll('#reportList input[type="checkbox"]:checked')];
+    const total   = document.querySelectorAll('#reportList input[type="checkbox"]').length;
+    document.getElementById('reportSelectAll').checked = checked.length === total && total > 0;
+    document.getElementById('reportSelectedCount').textContent = checked.length > 0 ? `${checked.length} รายการ` : '';
+    renderReportPreview(checked.map(cb => reportFiltered[parseInt(cb.value)]));
+  }
+
+  function buildReportText(r) {
+    const dateStr = thDateRpt(selectedDate);
+    const timeStr = r.timeFrom ? `${r.timeFrom} – ${r.timeTo}` : '—';
+    const unit = [r.dept, r.div].filter(Boolean).join(' ');
+    return `ขอเข้าปฏิบัติงานจาก Site Request
+สถานที่ : ${r.site}
+วันที่ : ${dateStr}
+เวลา : ${timeStr}
+โดย : ${r.name}
+หน่วยงาน : ${unit}
+เบอร์ติดต่อ : ${r.tel}
+รายละเอียดงาน : ${r.workDetail}
+
+ขอช่างไฟฟ้า Unmanned อำนวยความสะดวกให้ด้วยครับ
+ขอบคุณครับ`;
+  }
+
+  function renderReportPreview(selected) {
+    const preview = document.getElementById('reportPreview');
+    const btn = document.getElementById('btnCopyReport');
+    if (selected.length === 0) {
+      preview.innerHTML = '<div class="report-preview-empty">← เลือกรายการเพื่อดูตัวอย่าง</div>';
+      btn.disabled = true;
+      return;
+    }
+    const blocks = selected.map(r => {
+      const text = buildReportText(r);
+      return `<div class="report-preview-text">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+    });
+    preview.innerHTML = blocks.join('<hr class="report-divider-line">');
+    btn.disabled = false;
+  }
+
+  function copyReport() {
+    const checked = [...document.querySelectorAll('#reportList input[type="checkbox"]:checked')];
+    const selected = checked.map(cb => reportFiltered[parseInt(cb.value)]);
+    if (selected.length === 0) return;
+    const fullText = selected.map(r => buildReportText(r)).join('\n\n─────────────────\n\n');
+    navigator.clipboard.writeText(fullText).then(() => {
+      showToast('คัดลอกข้อความเรียบร้อย ✓');
+    }).catch(() => {
+      const ta = document.createElement('textarea');
+      ta.value = fullText;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast('คัดลอกข้อความเรียบร้อย ✓');
+    });
   }
 
   /* Set min date for fDateTo when fDateFrom changes */
