@@ -38,6 +38,18 @@
       font-weight: 600;
       white-space: nowrap;
     }
+    .area-tag {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .area-tag:hover { background: rgba(255,255,255,0.3); }
 
     /* ===== TOOLBAR ===== */
     .toolbar {
@@ -114,6 +126,26 @@
       transition: border-color 0.15s, color 0.15s;
     }
     .btn-icon:hover { border-color: #f97316; color: #f97316; }
+
+    .btn-back-menu {
+      flex-shrink: 0;
+      padding: 6px 12px 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      color: #475569;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-back-menu svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .btn-back-menu:hover { border-color: #f97316; color: #c2410c; background: #fff7ed; box-shadow: 0 1px 4px rgba(249,115,22,0.1); }
 
     /* ===== TABLE SECTION ===== */
     .section-header {
@@ -431,7 +463,10 @@
       header { padding: 12px 14px; }
       header h1 { font-size: 14px; }
       header p  { display: none; }
+      .area-tag { font-size: 11px; padding: 5px 10px; }
       .toolbar  { padding: 8px 14px; }
+      .toolbar-left { width: 100%; }
+      .btn-back-menu { margin-left: auto; }
       .toolbar-title { font-size: 13px; }
       .date-display { font-size: 12px; padding: 5px 10px; }
       .section-header { padding: 10px 14px 0; }
@@ -455,8 +490,15 @@
       <p>กองสถานีไฟฟ้า — บันทึก ติดตาม และแจ้งสถานะเหตุการณ์</p>
     </div>
   </div>
-  <div>
-    <span class="header-tag">กสฟ.</span>
+  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+    <span class="header-tag" style="cursor:default;display:inline-flex;align-items:center;gap:6px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s5-4.5 5-8A5 5 0 0 0 3 6c0 3.5 5 8 5 8Z"/><circle cx="8" cy="6" r="1.5"/></svg>
+      กสฟ.
+    </span>
+    <button class="area-tag" onclick="logoutToIndex()" title="ออกจากระบบ" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);display:inline-flex;align-items:center;gap:6px;border-radius:999px;">
+      <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2"/></svg>
+      ออกจากระบบ
+    </button>
   </div>
 </header>
 
@@ -466,10 +508,14 @@
     <span class="toolbar-title">รายการทั้งหมด</span>
     <span class="count-badge" id="countAll">0</span>
     <span class="count-pending" id="countPending">ค้างอยู่ 0</span>
+    <button class="btn-back-menu" onclick="changeArea()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2" transform="rotate(180 8 8)"/></svg>
+      กลับเมนูหลัก
+    </button>
   </div>
   <div class="toolbar-right">
     <div class="date-display">📅 <span id="currentDateLabel">—</span></div>
-    <button class="btn-icon" onclick="render()" title="รีเฟรช">🔄</button>
+    <button class="btn-icon" onclick="loadFromSheet()" title="รีเฟรชจาก Sheet">🔄</button>
     <button class="btn-add" onclick="openForm()">＋ เพิ่มรายการ</button>
   </div>
 </div>
@@ -565,12 +611,22 @@
   let records = [];
   let editId  = null;
 
+  function changeArea() {
+    window.location.href = 'index.html';
+  }
+
+  function logoutToIndex() {
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+  }
+
   /* ============================================================
      INIT
   ============================================================ */
   window.addEventListener('DOMContentLoaded', () => {
     loadFromStorage();
     render();
+    loadFromSheet();
     startScheduler();
     document.getElementById('overlay').addEventListener('click', e => {
       if (e.target === document.getElementById('overlay')) closeForm();
@@ -596,6 +652,45 @@
 
   function saveToStorage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    syncToSheet();
+  }
+
+  let _syncTimer = null;
+  function syncToSheet() {
+    if (!SCRIPT_URL) return;
+    clearTimeout(_syncTimer);
+    _syncTimer = setTimeout(async () => {
+      try {
+        await fetch(
+          `${SCRIPT_URL}?action=p3_save&token=${encodeURIComponent(P3_TOKEN)}`,
+          { method: 'POST', body: JSON.stringify({ records }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' }
+        );
+      } catch(e) { /* silent — ไม่ block UI */ }
+    }, 1500);
+  }
+
+  async function loadFromSheet() {
+    if (!SCRIPT_URL) return;
+    setSyncState('syncing', 'กำลังโหลดข้อมูลจาก Sheet...');
+    try {
+      const res  = await fetch(
+        `${SCRIPT_URL}?action=p3_read&token=${encodeURIComponent(P3_TOKEN)}`,
+        { redirect: 'follow' }
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.status === 'ok' && Array.isArray(data.records) && data.records.length > 0) {
+        records = data.records;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        render();
+        setSyncState('ok', 'โหลดข้อมูลจาก Sheet สำเร็จ');
+      } else {
+        setSyncState('ok', 'ใช้ข้อมูล local (Sheet ว่างเปล่า)');
+      }
+    } catch(e) {
+      setSyncState('warn', 'ใช้ข้อมูล local (โหลด Sheet ไม่สำเร็จ)');
+    }
   }
 
   /* ===== Demo data (first run only) ===== */
@@ -922,7 +1017,10 @@
         const data = await res.json();
         if (data.status !== 'ok') throw new Error(data.msg || 'script error');
       }
-      /* หลังบันทึกสำเร็จ: ลบรายการเสร็จสิ้น/ยกเลิกออก */
+      /* หลังบันทึกสำเร็จ: เปลี่ยน 'แจ้งใหม่' → 'ระหว่างดำเนินการ' แล้วลบเสร็จสิ้น/ยกเลิกออก */
+      records.forEach(r => {
+        if (r.status === 'new') { r.status = 'ongoing'; r.updatedAt = Date.now(); }
+      });
       records = records.filter(r => r.status !== 'done' && r.status !== 'cancelled');
       saveToStorage();
       localStorage.setItem(SYNC_KEY, dateStr);
