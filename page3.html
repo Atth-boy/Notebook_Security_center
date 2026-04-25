@@ -516,7 +516,7 @@
   <div class="toolbar-right">
     <div class="date-display">📅 <span id="currentDateLabel">—</span></div>
     <button class="btn-icon" onclick="loadFromSheet()" title="รีเฟรชจาก Sheet">🔄</button>
-    <button class="btn-add" onclick="openForm()">＋ เพิ่มรายการ</button>
+    <button class="btn-add" id="btnAdd" onclick="openForm()">＋ เพิ่มรายการ</button>
   </div>
 </div>
 
@@ -603,11 +603,13 @@
 <script>
   /* ===== Config ===== */
   const SCRIPT_URL  = 'https://script.google.com/macros/s/AKfycbziuDE16i0jq4knGer6xqBByV1Kb2BjyHeF9bt8FJID5TLK7EhZeFwPqUb4scvMgdPK/exec';
-  const P3_TOKEN    = 'substation';  // token ใช้ร่วมกับระบบเดิม (master token)
   const STORAGE_KEY = 'p3_records';
   const SYNC_KEY    = 'p3_last_sync';
 
   /* ===== State ===== */
+  let P3_TOKEN    = 'substation';
+  let currentArea = null;
+  let isOverview  = false;
   let records = [];
   let editId  = null;
 
@@ -624,8 +626,14 @@
      INIT
   ============================================================ */
   window.addEventListener('DOMContentLoaded', () => {
-    const area = sessionStorage.getItem('mea_area');
+    const token = sessionStorage.getItem('mea_token');
+    const area  = sessionStorage.getItem('mea_area');
+    const role  = sessionStorage.getItem('mea_role');
+    if (token) P3_TOKEN = token;
+    currentArea = area || null;
+    isOverview  = (role === 'master' || area === 'ภาพรวม' || !area);
     if (area) document.getElementById('headerAreaLabel').textContent = area;
+    document.getElementById('btnAdd').style.display = isOverview ? 'none' : '';
     loadFromStorage();
     render();
     loadFromSheet();
@@ -793,8 +801,11 @@
     }
 
     const rows = records.map((r, i) => {
-      const ov     = isOverdue(r);
+      const ov      = isOverdue(r);
       const odBadge = ov ? `<span class="overdue-badge" title="เกินกำหนดแล้ว">!</span>` : '';
+      const areaBadge = isOverview && r.area
+        ? `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 6px;margin-left:4px;white-space:nowrap">${esc(r.area)}</span>`
+        : '';
       const dtEnd   = fmtDisplay(r.dateEnd, r.timeEnd);
       const dtStart = fmtDisplay(r.dateStart, r.timeStart);
       const rowCls  = r.status === 'done' ? 'row-done' : r.status === 'cancelled' ? 'row-cancelled' : '';
@@ -803,7 +814,7 @@
         <td class="td-num">${i + 1}</td>
         <td>
           <div class="title-cell-wrap">
-            <span class="title-text">${esc(r.title)}</span>${odBadge}
+            <span class="title-text">${esc(r.title)}</span>${odBadge}${areaBadge}
           </div>
           <div class="loc-text">📍 ${esc(r.location)}</div>
         </td>
@@ -871,11 +882,14 @@
 
     wrap.innerHTML = records.map(r => {
       const ov = isOverdue(r);
-      const odBadge = ov ? `<span class="overdue-badge">!</span>` : '';
+      const odBadge  = ov ? `<span class="overdue-badge">!</span>` : '';
+      const areaBadge = isOverview && r.area
+        ? `<span style="font-size:10px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 6px;margin-left:4px">${esc(r.area)}</span>`
+        : '';
       const dtEnd   = fmtDisplay(r.dateEnd, r.timeEnd);
       return `
         <div class="rcard s-${r.status || 'new'}">
-          <div class="rcard-title">${esc(r.title)} ${odBadge}</div>
+          <div class="rcard-title">${esc(r.title)} ${odBadge}${areaBadge}</div>
           <div class="rcard-meta">
             <span>📍 ${esc(r.location)}</span>
             ${renderBadge(r.status)}
@@ -958,7 +972,7 @@
         id: `r${Date.now()}${Math.random().toString(36).slice(2,6)}`,
         title, location, detail,
         dateStart, timeStart, dateEnd, timeEnd,
-        status: 'new',
+        status: 'new', area: currentArea || '',
         createdAt: Date.now(), updatedAt: Date.now()
       });
     }
