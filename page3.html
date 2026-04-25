@@ -559,14 +559,14 @@
         <label>วันและเวลาเริ่มต้น</label>
         <div class="dt-row">
           <input type="date" id="fDateStart" />
-          <input type="text" id="fTimeStart" placeholder="00:00" maxlength="5" />
+          <select id="fTimeStart" style="flex:1"></select>
         </div>
       </div>
       <div class="field full">
         <label>วันและเวลาสิ้นสุด</label>
         <div class="dt-row">
           <input type="date" id="fDateEnd" />
-          <input type="text" id="fTimeEnd" placeholder="00:00" maxlength="5" />
+          <select id="fTimeEnd" style="flex:1"></select>
         </div>
         <p class="field-hint">หากถึงกำหนดแล้วยังไม่เสร็จ จะแสดงสัญลักษณ์ <strong style="color:#ef4444">!</strong> แจ้งเตือน</p>
       </div>
@@ -676,6 +676,7 @@
           { method: 'POST', body: JSON.stringify({ records }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' }
         );
+        await loadFromSheet();
       } catch(e) { /* silent — ไม่ block UI */ }
     }, 1500);
   }
@@ -894,6 +895,21 @@
   /* ============================================================
      FORM
   ============================================================ */
+  function buildTimeOptions(selectId, selectedVal) {
+    const sel = document.getElementById(selectId);
+    sel.innerHTML = '';
+    for (let h = 0; h <= 24; h++) {
+      const mList = h < 24 ? [0, 30] : [0];
+      mList.forEach(m => {
+        const val = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = val;
+        if (val === selectedVal) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+  }
+
   function openForm(id = null) {
     editId = id;
     document.getElementById('modalTitle').textContent = id ? 'แก้ไขรายการ' : 'เพิ่มรายการใหม่';
@@ -903,9 +919,9 @@
     document.getElementById('fLocation').value  = r?.location  || '';
     document.getElementById('fDetail').value    = r?.detail    || '';
     document.getElementById('fDateStart').value = r?.dateStart || '';
-    document.getElementById('fTimeStart').value = r?.timeStart || '';
     document.getElementById('fDateEnd').value   = r?.dateEnd   || '';
-    document.getElementById('fTimeEnd').value   = r?.timeEnd   || '';
+    buildTimeOptions('fTimeStart', r?.timeStart || '08:00');
+    buildTimeOptions('fTimeEnd',   r?.timeEnd   || '17:00');
 
     document.getElementById('overlay').classList.add('active');
     setTimeout(() => document.getElementById('fTitle').focus(), 80);
