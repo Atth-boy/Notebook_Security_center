@@ -650,10 +650,10 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        records = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        records = isOverview ? parsed : parsed.filter(r => !r.area || r.area === currentArea);
       } else {
-        records = seedDemo();
-        saveToStorage();
+        records = [];
       }
     } catch {
       records = [];
@@ -691,7 +691,8 @@
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (data.status === 'ok' && Array.isArray(data.records) && data.records.length > 0) {
-        records = data.records;
+        const fetched = data.records;
+        records = isOverview ? fetched : fetched.filter(r => !r.area || r.area === currentArea);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
         render();
         setSyncState('ok', 'โหลดข้อมูลจาก Sheet สำเร็จ');
@@ -701,43 +702,6 @@
     } catch(e) {
       setSyncState('warn', 'ใช้ข้อมูล local (โหลด Sheet ไม่สำเร็จ)');
     }
-  }
-
-  /* ===== Demo data (first run only) ===== */
-  function seedDemo() {
-    const today = fmtDateStr(new Date());
-    const yesterday = fmtDateStr(addDays(new Date(), -1));
-    const tomorrow  = fmtDateStr(addDays(new Date(),  2));
-    return [
-      {
-        id: 'demo1', title: 'หม้อแปลงไฟฟ้าขัดข้อง — เกิดความร้อนสูงผิดปกติ',
-        location: 'สถานีย่อยบางแค', detail: 'หม้อแปลงหลักตรวจพบอุณหภูมิสูงกว่า 85°C รอช่างเฉพาะทางเข้าตรวจสอบ',
-        dateStart: today, timeStart: '08:30',
-        dateEnd: yesterday, timeEnd: '17:00',
-        status: 'ongoing', createdAt: Date.now(), updatedAt: Date.now()
-      },
-      {
-        id: 'demo2', title: 'ตรวจสอบระบบแจ้งเตือนอัตโนมัติ SCADA',
-        location: 'สถานีต้นทางถนนตก', detail: 'ระบบ SCADA แสดง Alarm สัญญาณผิดปกติที่ Feeder 12',
-        dateStart: today, timeStart: '09:00',
-        dateEnd: tomorrow, timeEnd: '16:00',
-        status: 'new', createdAt: Date.now(), updatedAt: Date.now()
-      },
-      {
-        id: 'demo3', title: 'ซ่อมบำรุงประจำปี Breaker สาย 115 kV',
-        location: 'สถานีย่อยนนทรี', detail: '',
-        dateStart: today, timeStart: '07:00',
-        dateEnd: today, timeEnd: '12:00',
-        status: 'done', createdAt: Date.now(), updatedAt: Date.now()
-      },
-      {
-        id: 'demo4', title: 'แจ้งเหตุไฟฟ้าดับบริเวณโซน A',
-        location: 'สถานีย่อยพรานนก', detail: 'ลูกค้าแจ้งเข้ามาหลายรายว่าไฟดับ กำลังตรวจสอบสาเหตุ',
-        dateStart: '', timeStart: '',
-        dateEnd: '', timeEnd: '',
-        status: 'new', createdAt: Date.now(), updatedAt: Date.now()
-      },
-    ];
   }
 
   /* ============================================================
