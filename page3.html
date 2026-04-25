@@ -493,7 +493,7 @@
   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
     <span class="header-tag" style="cursor:default;display:inline-flex;align-items:center;gap:6px;">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 14s5-4.5 5-8A5 5 0 0 0 3 6c0 3.5 5 8 5 8Z"/><circle cx="8" cy="6" r="1.5"/></svg>
-      กสฟ.
+      <span id="headerAreaLabel">กสฟ.</span>
     </span>
     <button class="area-tag" onclick="logoutToIndex()" title="ออกจากระบบ" style="background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.35);display:inline-flex;align-items:center;gap:6px;border-radius:999px;">
       <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2"/></svg>
@@ -559,14 +559,14 @@
         <label>วันและเวลาเริ่มต้น</label>
         <div class="dt-row">
           <input type="date" id="fDateStart" />
-          <input type="time" id="fTimeStart" />
+          <input type="text" id="fTimeStart" placeholder="00:00" maxlength="5" />
         </div>
       </div>
       <div class="field full">
         <label>วันและเวลาสิ้นสุด</label>
         <div class="dt-row">
           <input type="date" id="fDateEnd" />
-          <input type="time" id="fTimeEnd" />
+          <input type="text" id="fTimeEnd" placeholder="00:00" maxlength="5" />
         </div>
         <p class="field-hint">หากถึงกำหนดแล้วยังไม่เสร็จ จะแสดงสัญลักษณ์ <strong style="color:#ef4444">!</strong> แจ้งเตือน</p>
       </div>
@@ -624,6 +624,8 @@
      INIT
   ============================================================ */
   window.addEventListener('DOMContentLoaded', () => {
+    const area = sessionStorage.getItem('mea_area');
+    if (area) document.getElementById('headerAreaLabel').textContent = area;
     loadFromStorage();
     render();
     loadFromSheet();
