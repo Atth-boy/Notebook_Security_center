@@ -57,13 +57,12 @@
       border-bottom: 1px solid #e2e8f0;
       padding: 10px 32px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
     }
+    .toolbar-row1 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .toolbar-row2 { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
     .toolbar-left  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .toolbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 
     .toolbar-title { font-size: 15px; font-weight: 700; color: #374151; }
     .count-badge {
@@ -95,7 +94,7 @@
       border-radius: 999px;
       font-size: 13px;
       color: #374151;
-      font-weight: 600;
+      font-weight: 400;
       white-space: nowrap;
     }
 
@@ -135,7 +134,7 @@
       background: white;
       font-family: inherit;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       white-space: nowrap;
       color: #475569;
@@ -465,8 +464,8 @@
       header p  { display: none; }
       .area-tag { font-size: 11px; padding: 5px 10px; }
       .toolbar  { padding: 8px 14px; }
-      .toolbar-left { width: 100%; }
-      .btn-back-menu { margin-left: auto; }
+      .toolbar-row1 { flex-wrap: wrap; }
+      .toolbar-row2 { justify-content: flex-start; flex-wrap: wrap; }
       .toolbar-title { font-size: 13px; }
       .date-display { font-size: 12px; padding: 5px 10px; }
       .section-header { padding: 10px 14px 0; }
@@ -504,16 +503,18 @@
 
 <!-- ===== TOOLBAR ===== -->
 <div class="toolbar">
-  <div class="toolbar-left">
-    <span class="toolbar-title">รายการทั้งหมด</span>
-    <span class="count-badge" id="countAll">0</span>
-    <span class="count-pending" id="countPending">ค้างอยู่ 0</span>
+  <div class="toolbar-row1">
+    <div class="toolbar-left">
+      <span class="toolbar-title">รายการทั้งหมด</span>
+      <span class="count-badge" id="countAll">0</span>
+      <span class="count-pending" id="countPending">ค้างอยู่ 0</span>
+    </div>
     <button class="btn-back-menu" onclick="changeArea()">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3H4a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h6"/><path d="M8 8h6m0 0-2-2m2 2-2 2" transform="rotate(180 8 8)"/></svg>
       กลับเมนูหลัก
     </button>
   </div>
-  <div class="toolbar-right">
+  <div class="toolbar-row2">
     <div class="date-display">📅 <span id="currentDateLabel">—</span></div>
     <button class="btn-icon" onclick="loadFromSheet()" title="รีเฟรชจาก Sheet">🔄</button>
     <button class="btn-add" id="btnAdd" onclick="openForm()">＋ เพิ่มรายการ</button>
