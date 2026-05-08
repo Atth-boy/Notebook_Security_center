@@ -1547,7 +1547,9 @@
   }
 
   function buildReportText(r) {
-    const dateStr = thDateRpt(selectedDate);
+    const dateStr = r.dateFrom === r.dateTo
+      ? thDateRpt(r.dateFrom)
+      : `${thDateRpt(r.dateFrom)} ถึง ${thDateRpt(r.dateTo)}`;
     const timeStr = r.timeFrom ? `${r.timeFrom} – ${r.timeTo}` : '—';
     const unit = [r.dept, r.div].filter(Boolean).join(' ');
     return `ขอเข้าปฏิบัติงานจาก Site Request
